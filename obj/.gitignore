@@ -1,0 +1,5 @@
+# Compiled Object files
+*.o
+
+# Macshit
+.DS_Store

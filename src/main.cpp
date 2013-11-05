@@ -3,16 +3,18 @@
 #include <cstdio>
 
 #define SUCCESS 1
+#define WIDTH 	640
+#define HEIGHT 	480
 
-int 	initGL();
+int 	initGL(int width, int height);
 
 GLFWwindow * g_window;
 
 int main()
 {
-	if(initGL() != SUCCESS)
+	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
-	
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(g_window))
     {
@@ -30,32 +32,37 @@ int main()
 	return 0;
 }
 
-int initGL()
+int initGL(int width, int height)
 {
-    GLFWwindow* g_window;
-
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
     /* Create a windowed mode window and its OpenGL context */
-    g_window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    g_window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
     if (!g_window)
     {
+		printf("glfw error: window could not be created \n");
         glfwTerminate();
         return -1;
     }
 
-    glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-		printf("GLEW fatal error \n");
-		return -1;
-	}
-
     /* Make the window's context current */
     glfwMakeContextCurrent(g_window);
+
+    glewExperimental = GL_TRUE;
+	GLenum error = glewInit();
+	if(GLEW_OK != error)
+	{
+		printf("glew error: init returned an error \n");
+		glfwTerminate();
+		return -1;
+	}
 
 	return SUCCESS;
 }
