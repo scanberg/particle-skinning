@@ -1,37 +1,39 @@
-Sources		= main.cpp
+main 	= main.cpp
+src		=
 
-CFlags 		= -c -Wall -g -O2
-LDFlags 	= 
-ObjectDir 	= obj/
-SourceDir 	= src/
-Executable  = Program
-BinDir 		= 
+cFlags 	= -c -Wall -g -O2
+ldFlags =
+objDir  = obj/
+srcDir  = src/
+binDir 	=
+bin  	= Program
 
-SYS := $(shell gcc -dumpmachine)
-ifneq (, $(findstring linux, $(SYS)))
-	LDFlags += -lglfw -lGL -lGLEW
-else ifneq (, $(findstring mingw, $(SYS)))
-	LDFlags += -lglfw3 -lglew32 -lopengl32
-else ifneq (, $(findstring darwin, $(SYS)))
-	LDFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
+UNAME := $(shell uname -s)
+ifeq ($(UNAME), Linux)
+	ldFlags += -lglfw -lGL -lGLEW
+else ifeq ($(UNAME), mingw)
+	ldFlags += -lglfw3 -lglew32 -lopengl32
+else ifneq ($(UNAME), Darwin)
+	ldFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
 endif
 
 CC = g++
 RM = rm
 
-Objects 	= $(Sources:.cpp=.o)
-CSources 	= $(addprefix $(SourceDir),$(Sources))
-CObjects 	= $(addprefix $(ObjectDir),$(Objects))
-CExecutable = $(addprefix $(BinDir),$(Executable))
+objects = $(src:.cpp=.o)
+cMain 	= $(addprefix $(srcDir),$(main))
+cSrc 	= $(addprefix $(srcDir),$(src))
+cObj 	= $(addprefix $(objDir),$(objects))
+cBin 	= $(addprefix $(binDir),$(bin))
 
-all: $(CSources) $(CExecutable)
-	./$(CExecutable)
+all: $(cBin)
+	./$(cBin)
 
-$(CExecutable): $(CObjects)
-	$(CC) $(CObjects) $(LDFlags) -o $@
+$(cBin): $(cMain) $(cObj)
+	$(CC) $^ $(ldFlags) -o $@
 
-$(ObjectDir)%.o: $(SourceDir)%.cpp
-	$(CC) $(CFlags) $< -o $@
+$(objDir)%.o: $(srcDir)%.cpp $(srcDir)%.h
+	$(CC) $(cFlags) $< -o $@
 
 clean:
-	$(RM) $(CObjects)
+	$(RM) $(cObj)
