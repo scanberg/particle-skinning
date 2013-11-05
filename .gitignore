@@ -11,3 +11,9 @@
 *.lai
 *.la
 *.a
+
+# Shitty swap
+*.swp
+
+# Macshit
+.DS_Store
