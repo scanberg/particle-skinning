@@ -64,5 +64,9 @@ int initGL(int width, int height)
 		return -1;
 	}
 
+    printf("Successfully created OpenGL %i.%i context \n",
+        glfwGetWindowAttrib(g_window, GLFW_CONTEXT_VERSION_MAJOR),
+        glfwGetWindowAttrib(g_window, GLFW_CONTEXT_VERSION_MINOR));
+
 	return SUCCESS;
 }
