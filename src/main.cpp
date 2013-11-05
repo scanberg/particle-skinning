@@ -16,7 +16,9 @@ int main()
 		return -1;
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(g_window))
+    while (!glfwWindowShouldClose(g_window) &&
+        !glfwGetKey(g_window, GLFW_KEY_Q) &&
+        !glfwGetKey(g_window, GLFW_KEY_ESCAPE))
     {
         /* Render here */
 
