@@ -68,5 +68,7 @@ int initGL(int width, int height)
         glfwGetWindowAttrib(g_window, GLFW_CONTEXT_VERSION_MAJOR),
         glfwGetWindowAttrib(g_window, GLFW_CONTEXT_VERSION_MINOR));
 
+    printf("GLSL version %s \n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
 	return SUCCESS;
 }
