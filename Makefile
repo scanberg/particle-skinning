@@ -25,6 +25,7 @@ CObjects 	= $(addprefix $(ObjectDir),$(Objects))
 CExecutable = $(addprefix $(BinDir),$(Executable))
 
 all: $(CSources) $(CExecutable)
+	./$(CExecutable)
 
 $(CExecutable): $(CObjects)
 	$(CC) $(CObjects) $(LDFlags) -o $@
