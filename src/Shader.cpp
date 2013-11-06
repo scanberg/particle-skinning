@@ -11,7 +11,12 @@ Shader * Shader::s_boundShader = NULL;
  */
 
 char* readTextFile(const char *filename) {
+	FILE * file;
+#ifdef _WIN32
+	fopen_s(&file, filename, "r");
+#else
     FILE *file = fopen(filename, "r");
+#endif
     if(file == NULL)
     {
     	printf("Cannot open file %s", filename);
@@ -27,7 +32,7 @@ char* readTextFile(const char *filename) {
     if(bytesinfile > 0)
     {
         buffer = (char*)malloc(bytesinfile+1);
-        int bytesread = fread( buffer, 1, bytesinfile, file);
+        size_t bytesread = fread( buffer, 1, bytesinfile, file);
         buffer[bytesread] = '\0'; // Terminate the string with a null character
     }
 
