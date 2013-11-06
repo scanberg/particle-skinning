@@ -6,7 +6,7 @@
 #define WIDTH 	640
 #define HEIGHT 	480
 
-int 	initGL(int width, int height);
+int initGL(int width, int height);
 
 GLFWwindow * g_window;
 
