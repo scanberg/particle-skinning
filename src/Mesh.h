@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Transform.h"
+#include "Animation.h"
 
 typedef struct
 {
@@ -14,26 +14,6 @@ typedef struct
 {
 	unsigned int index[3];
 }sTriangle;
-
-typedef struct
-{
-	Transform 		pose;
-	unsigned int 	frameNumber;
-}sAnimationKeyFrame;
-
-typedef struct
-{
-	sAnimationKeyFrame * 	keyFrame;
-	unsigned int 			keyFrameCount;
-}sAnimationChannel;
-
-typedef struct
-{
-	sAnimationChannel * 	channel;
-	unsigned int			channelCount;
-
-	unsigned int 			framesPerSecond;
-}sAnimation;
 
 class Mesh
 {
@@ -56,4 +36,7 @@ private:
 	unsigned int	m_boneID;
 	Transform * 	m_boneData;
 	unsigned int 	m_boneCount;
+
+	Animation *		m_animationData;
+	unsigned int	m_animationCount;
 };
