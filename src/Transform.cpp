@@ -24,7 +24,19 @@ void Transform::setScale(const glm::vec3 &scale)
 
 void Transform::setMat4(const glm::mat4 &matrix)
 {
+	glm::vec3 c[] = {
+		glm::vec3(glm::column(matrix, 0)),
+		glm::vec3(glm::column(matrix, 1)),
+		glm::vec3(glm::column(matrix, 2)),
+		glm::vec3(glm::column(matrix, 3)) };
 
+	glm::vec3 scale = glm::vec3(glm::length(c[0]), glm::length(c[1]), glm::length(c[2]));
+	glm::quat orientation = glm::quat_cast(matrix);
+	glm::vec3 translation = c[3];
+
+	setScale(scale);
+	setOrientation(orientation);
+	setTranslation(translation);
 }
 
 const glm::vec3 & Transform::getTranslation()
