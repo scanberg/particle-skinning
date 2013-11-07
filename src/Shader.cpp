@@ -15,7 +15,7 @@ char* readTextFile(const char *filename) {
 #ifdef _WIN32
 	fopen_s(&file, filename, "r");
 #else
-    FILE *file = fopen(filename, "r");
+    file = fopen(filename, "r");
 #endif
     if(file == NULL)
     {

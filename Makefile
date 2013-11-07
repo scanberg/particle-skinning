@@ -1,5 +1,5 @@
 main 	= main.cpp
-src		=
+src		= Shader.cpp
 
 cFlags 	= -c -Wall -g -O2
 ldFlags =
@@ -13,7 +13,7 @@ ifeq ($(UNAME), Linux)
 	ldFlags += -lglfw -lGL -lGLEW
 else ifeq ($(UNAME), mingw)
 	ldFlags += -lglfw3 -lglew32 -lopengl32
-else ifneq ($(UNAME), Darwin)
+else ifeq ($(UNAME), Darwin)
 	ldFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
 endif
 
