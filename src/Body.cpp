@@ -36,8 +36,6 @@ Body::Body(const char * filename)
 
 	m_triangleData	= NULL;
 	m_triangleCount = 0;
-
-
 }
 
 Body::~Body()
