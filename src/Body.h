@@ -49,6 +49,12 @@ public:
 	sPart * 		getPart(const StringHash & sh);
 	Trasform * 		getBone(const StringHash & sh);
 	Animation * 	getAnimation(const StringHash & sh);
+
+	unsigned int 	getVertexBuffer();
+	unsigned int	getIndexBuffer();
+
+	void			draw();
+	void 			drawPart(unsigned int index);
 	
 private:
 	// GL buffers
@@ -61,15 +67,15 @@ private:
 	sTriangle * 	m_triangleData;
 	unsigned int 	m_triangleCount;
 
-	unsigned int * 	m_partID;
+	StringHash * 	m_partSH;
 	sPart *			m_partData;
 	unsigned int 	m_partCount;
 
-	unsigned int *	m_boneID;
+	StringHash *	m_boneSH;
 	Transform * 	m_boneData;
 	unsigned int 	m_boneCount;
 
-	unsigned int * 	m_animationID;
+	StringHash * 	m_animationSH;
 	Animation *		m_animationData;
 	unsigned int	m_animationCount;
 };
