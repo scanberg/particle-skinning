@@ -29,7 +29,7 @@ bool ImportAssimp( const char* pFile)
 	return true;
 }
 
-Body::Body(const char * filename)
+Body::Body(const char * meshfile, const char * animfile)
 {
 	m_vertexData 	= NULL;
 	m_vertexCount 	= 0;

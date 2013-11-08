@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <cstdio>
 
+#include "Body.h"
+
 #define SUCCESS 1
 #define WIDTH 	640
 #define HEIGHT 	480
@@ -14,6 +16,8 @@ int main()
 {
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
+
+	Body bob( "data/bob.md5mesh", "data/bob.md5anim" );
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(g_window) &&

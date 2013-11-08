@@ -33,7 +33,7 @@ public:
 		unsigned int count;
 	}sPart;
 
-	Body(const char * filename);
+	Body(const char * meshfile, const char * animfile = NULL);
 	~Body();
 
 	sVertex *		getVertexData();
@@ -47,7 +47,7 @@ public:
 	unsigned int 	getAnimationCount();
 
 	sPart * 		getPart(const StringHash & sh);
-	Trasform * 		getBone(const StringHash & sh);
+	Transform * 	getBone(const StringHash & sh);
 	Animation * 	getAnimation(const StringHash & sh);
 
 	unsigned int 	getVertexBuffer();
