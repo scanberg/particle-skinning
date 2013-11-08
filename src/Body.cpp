@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Body.h"
 
 #include <assimp/cimport.h>        // Plain-C interface
 #include <assimp/scene.h>          // Output data structure
@@ -29,7 +29,7 @@ bool ImportAssimp( const char* pFile)
 	return true;
 }
 
-Mesh::Mesh(const char * filename)
+Body::Body(const char * filename)
 {
 	m_vertexData 	= NULL;
 	m_vertexCount 	= 0;
@@ -40,7 +40,7 @@ Mesh::Mesh(const char * filename)
 
 }
 
-Mesh::~Mesh()
+Body::~Body()
 {
 	if(m_vertexData)
 		delete[] m_vertexData;

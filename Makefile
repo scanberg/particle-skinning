@@ -1,12 +1,14 @@
 main 	= main.cpp
-src		= Shader.cpp
+src		= Animation.cpp Body.cpp crc32.cpp Model.cpp Shader.cpp Transform.cpp
 
 cFlags 	= -c -Wall -g -O2
-ldFlags =
+ldFlags = -lassimp
 objDir  = obj/
 srcDir  = src/
 binDir 	=
 bin  	= Program
+
+CC = g++
 
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Linux)
@@ -14,10 +16,13 @@ ifeq ($(UNAME), Linux)
 else ifeq ($(UNAME), mingw)
 	ldFlags += -lglfw3 -lglew32 -lopengl32
 else ifeq ($(UNAME), Darwin)
+	cFlags 	+= -I/usr/local/include
+	ldFlags += -I/usr/local/include
+	ldFlags += -L/usr/local/lib
 	ldFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
+	CC = clang++
 endif
 
-CC = g++
 RM = rm
 
 objects = $(src:.cpp=.o)
