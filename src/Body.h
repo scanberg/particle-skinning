@@ -4,6 +4,11 @@
 #include "Animation.h"
 #include "StringHash.h"
 
+#include <assimp/cimport.h>        // Plain-C interface
+#include <assimp/scene.h>          // Output data structure
+#include <assimp/postprocess.h>    // Post processing flags
+
+
 /*	Mesh class
  *	Should be considered as a resource
  *
@@ -35,6 +40,8 @@ public:
 
 	Body(const char * meshfile, const char * animfile = NULL);
 	~Body();
+
+	bool ImportScene( const aiScene* scene);
 
 	sVertex *		getVertexData();
 	unsigned int 	getVertexCount();
