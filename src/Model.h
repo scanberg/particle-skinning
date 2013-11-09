@@ -36,7 +36,8 @@ public:
 	void pause();
 	void stop();
 
-	
+	void assignMaterialToPart(Material * mat, StringHash part);
+	void assignMaterialToAll(Material * mat);
 private:
 	Transform		m_transform;
 
