@@ -8,6 +8,7 @@ public:
 	Material();
 	~Material();
 
+	void bind();
 private:
 
 };

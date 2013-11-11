@@ -105,3 +105,9 @@ unsigned int crc32(const void * ptr, size_t size)
 {
 	return crc32(0xFFFFFFFF, ptr, size);
 }
+
+unsigned int crc32(const char * str)
+{
+	size_t len = strlen(str);
+	return crc32(0xFFFFFFFF, str, len);
+}

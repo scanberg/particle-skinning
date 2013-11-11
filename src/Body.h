@@ -10,7 +10,7 @@
 
 
 /*	Mesh class
- *	Should be considered as a resource
+ *	Should be considered as a shared resource
  *
  *
  */
@@ -64,24 +64,30 @@ public:
 	void 			drawPart(unsigned int index);
 	
 private:
+	void fillBuffers();
+
 	// GL buffers
 	unsigned int 	m_vb;
 	unsigned int 	m_ib;
 
+	// Geometric data
 	sVertex * 		m_vertexData;
 	unsigned int 	m_vertexCount;
 
 	sTriangle * 	m_triangleData;
 	unsigned int 	m_triangleCount;
 
+	// Groups defining parts of the mesh
 	StringHash * 	m_partSH;
 	sPart *			m_partData;
 	unsigned int 	m_partCount;
 
+	// Bone transformations
 	StringHash *	m_boneSH;
 	Transform * 	m_boneData;
 	unsigned int 	m_boneCount;
 
+	// Animation data
 	StringHash * 	m_animationSH;
 	Animation *		m_animationData;
 	unsigned int	m_animationCount;

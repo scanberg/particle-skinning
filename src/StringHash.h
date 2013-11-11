@@ -4,7 +4,6 @@ class StringHash
 {
 public:
 	StringHash(const char * str);
-	~StringHash();
 
 	inline const char * getStr()
 	{ return m_str; }

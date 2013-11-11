@@ -1,4 +1,5 @@
 #include "Body.h"
+#include <GL/glew.h>
 
 bool ImportScene( const aiScene* scene)
 {
@@ -7,11 +8,29 @@ bool ImportScene( const aiScene* scene)
 
 Body::Body(const char * meshfile, const char * animfile)
 {
-	m_vertexData 	= NULL;
-	m_vertexCount 	= 0;
+	m_vertexData 		= NULL;
+	m_vertexCount 		= 0;
 
-	m_triangleData	= NULL;
-	m_triangleCount = 0;
+	m_triangleData		= NULL;
+	m_triangleCount 	= 0;
+
+	m_partSH			= NULL;
+	m_partData 			= NULL;
+	m_partCount 		= 0;
+
+	m_boneSH 			= NULL;
+	m_boneData			= NULL;
+	m_boneCount 		= 0;
+
+	m_animationSH 		= NULL;
+	m_animationData 	= NULL;
+	m_animationCount 	= 0;
+
+	m_vb = 0;
+	m_ib = 0;
+
+	glGenBuffers(1, &m_vb);
+	glGenBuffers(1, &m_ib);
 
 	// Start the import on the given file with some example postprocessing
 	// Usually - if speed is not the most important aspect for you - you'll t
@@ -21,6 +40,13 @@ Body::Body(const char * meshfile, const char * animfile)
 	aiProcess_Triangulate            |
 	aiProcess_JoinIdenticalVertices  |
 	aiProcess_SortByPType);
+
+	// If the import failed, report it
+	if(!scene)
+	{
+		printf("%s \n", aiGetErrorString());
+		return;
+	}
 	
 	// Get array allocation data
 	m_partCount = scene->mNumMeshes;
@@ -35,6 +61,7 @@ Body::Body(const char * meshfile, const char * animfile)
 		m_boneCount	     += scene->mMeshes[i]->mNumBones;
 		m_animationCount += scene->mNumAnimations;
 	}
+
 	m_vertexData    = new sVertex[m_vertexCount];
 	m_triangleData  = new sTriangle[m_triangleCount];
 	m_boneData      = new Transform[m_boneCount];
@@ -60,7 +87,7 @@ Body::Body(const char * meshfile, const char * animfile)
 
 	// If we have a separate animation file
 	if(animfile != NULL) {
-		scene = aiImportFile(animfile, 
+		scene = aiImportFile(animfile,
 		aiProcess_CalcTangentSpace       | 
 		aiProcess_Triangulate            |
 		aiProcess_JoinIdenticalVertices  |
@@ -68,17 +95,9 @@ Body::Body(const char * meshfile, const char * animfile)
 
 	}
 
-	// If the import failed, report it
-	if(!scene)
-	{
-		printf("%s \n", aiGetErrorString());
-		return;
-	}
-
 	aiReleaseImport(scene);
 
-
-
+	fillBuffers();
 }
 
 Body::~Body()
@@ -88,4 +107,34 @@ Body::~Body()
 
 	if(m_triangleData)
 		delete[] m_triangleData;
+
+	if(m_partData)
+		delete[] m_partData;
+
+	if(m_partSH)
+		delete[] m_partSH;
+
+	if(m_boneData)
+		delete[] m_boneData;
+
+	if(m_boneSH)
+		delete[] m_boneSH;
+
+	if(m_animationData)
+		delete[] m_animationData;
+
+	if(m_animationSH)
+		delete[] m_animationSH;
+
+	glDeleteBuffers(1, &m_vb);
+	glDeleteBuffers(1, &m_ib);
+}
+
+void Body::fillBuffers()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, m_vb);
+	glBufferData(GL_ARRAY_BUFFER, m_vertexCount * sizeof(sVertex), m_vertexData, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_triangleCount * sizeof(sTriangle), m_triangleData, GL_STATIC_DRAW);
 }

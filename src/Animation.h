@@ -20,9 +20,9 @@ public:
 	Animation();
 	~Animation();
 private:
-	sAnimationChannel * channel;
-	unsigned int		channelCount;
+	sAnimationChannel * m_channel;
+	unsigned int		m_channelCount;
 
-	unsigned int 		framesPerSecond;
-	unsigned int		frameCount;
+	unsigned int 		m_framesPerSecond;
+	unsigned int		m_frameCount;
 };

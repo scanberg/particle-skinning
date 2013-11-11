@@ -62,3 +62,12 @@ glm::mat4 Transform::getMat4()
 
 	return T * R * S;
 }
+
+glm::mat4 Transform::getInvMat4()
+{
+	glm::mat4 T = glm::translate(glm::mat4(), -m_translation);
+	glm::mat4 R = glm::mat4_cast(glm::conjugate(m_orientation));
+	glm::mat4 S = glm::scale(glm::mat4(), 1.0f/m_scale);
+
+	return S * R * T;
+}

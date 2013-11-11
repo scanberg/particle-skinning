@@ -20,10 +20,3 @@ StringHash::StringHash(const char * str)
 
 	m_hash = crc32(m_str, len);
 }
-
-StringHash::~StringHash()
-{
-	if(m_str) {
-		delete[] m_str;
-	}
-}

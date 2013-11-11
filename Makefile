@@ -1,7 +1,8 @@
 main 	= main.cpp
 src		= Animation.cpp Body.cpp crc32.cpp Model.cpp Shader.cpp Transform.cpp
 
-cFlags 	= -c -Wall -g -O2
+# use some O flag to speed up when shit is working
+cFlags 	= -c -Wall -g
 ldFlags = -lassimp
 objDir  = obj/
 srcDir  = src/

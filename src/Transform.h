@@ -19,6 +19,7 @@ public:
 	const glm::vec3 & getScale();
 
 	glm::mat4 getMat4();
+	glm::mat4 getInvMat4();
 
 private:
 	glm::vec3 m_translation;

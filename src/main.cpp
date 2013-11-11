@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "Body.h"
+#include "Shader.h"
 
 #define SUCCESS 1
 #define WIDTH 	640
@@ -17,7 +18,12 @@ int main()
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
 
-	Body bob( "data/bob.md5mesh", "data/bob.md5anim" );
+	Body bob( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
+
+    Shader basicShader;
+    basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
+    basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
+    basicShader.build();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(g_window) &&
