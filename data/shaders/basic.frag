@@ -1,15 +1,11 @@
 #version 150
 
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
- 
-in vec3 in_position;
-in vec2 in_texCoord;
+out vec4 out_frag0;
 
-out vec2 TexCoord;
- 
+in vec2 TexCoord;
+
 void main(void)
 {
-	gl_Position = projMatrix * viewMatrix * vec4(in_position, 1.0);
-	TexCoord = in_texCoord;
+	vec2 texCoord = TexCoord;
+	out_frag0 = vec4(vec3(1,0,0), 1.0);
 }

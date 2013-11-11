@@ -120,11 +120,11 @@ void Shader::build()
 	glLinkProgram(m_program);
 
 	GLint status;
-	glGetProgramiv(m_program, GL_VALIDATE_STATUS, &status);
+	glGetProgramiv(m_program, GL_LINK_STATUS, &status);
 
 	if(status != GL_TRUE)
 	{
-		printf("Program validate error: \n");
+		printf("Program link error: \n");
 		printProgramInfoLog(m_program);
 	}
 
