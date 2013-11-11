@@ -71,17 +71,36 @@ Body::Body(const char * meshfile, const char * animfile)
 	aiMesh** mesh = scene->mMeshes;
 	//aiBone** bone;
 	aiVector3D* vertex;
+	aiFace* face;
 	aiVertexWeight** weight;
+
+	unsigned int vertexOffset = 0, triangleOffset = 0;
+
 	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
 		vertex = mesh[i]->mVertices;
+		face   = mesh[i]->mFaces;
 		//bone = mesh[i]->mBones;
-		m_vertexCount += mesh[i]->mNumVertices;
 
+		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
-			m_vertexData[m_vertexCount+j].position.x = vertex[j][0];
-			m_vertexData[m_vertexCount+j].position.y = vertex[j][1];
-			m_vertexData[m_vertexCount+j].position.z = vertex[j][2];
+			m_vertexData[vertexOffset+j].position.x = vertex[j][0];
+			m_vertexData[vertexOffset+j].position.y = vertex[j][1];
+			m_vertexData[vertexOffset+j].position.z = vertex[j][2];
 		}
+
+		// Get triangle indices
+		for(unsigned int j=0; j<mesh[i]->mNumFaces; ++j) {
+			if(face[j].mNumIndices == 3) {
+				m_triangleData[triangleOffset+j].index[0] = vertexOffset + face[i].mIndices[0];
+				m_triangleData[triangleOffset+j].index[1] = vertexOffset + face[i].mIndices[1];
+				m_triangleData[triangleOffset+j].index[2] = vertexOffset + face[i].mIndices[2];
+			} else {
+				fprintf(stderr, "Faces with != 3 indices not implemented\n");
+			}
+		}
+
+		vertexOffset   += mesh[i]->mNumVertices;
+		triangleOffset += mesh[i]->mNumFaces;
 	}
 	
 
