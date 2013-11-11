@@ -12,7 +12,7 @@ StringHash::StringHash(const char * str)
 		return;
 	}
 
-	int len = strlen(str);
+	size_t len = strlen(str);
 	len = (len > 26) ? 26 : len;
 
 	memcpy(m_str, str, len);

@@ -19,7 +19,7 @@ char* readTextFile(const char *filename) {
 #endif
     if(file == NULL)
     {
-    	printf("Cannot open file %s", filename);
+    	printf("Unable to open file \"%s\". \n", filename);
     	return 0;
     }
 

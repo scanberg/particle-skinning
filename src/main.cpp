@@ -4,6 +4,7 @@
 
 #include "Body.h"
 #include "Shader.h"
+#include "Camera.h"
 
 #define SUCCESS 1
 #define WIDTH 	640
@@ -24,6 +25,8 @@ int main()
     basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
     basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
     basicShader.build();
+
+	Camera camera;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(g_window) &&
