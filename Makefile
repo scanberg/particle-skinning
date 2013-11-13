@@ -3,7 +3,7 @@ src		= Animation.cpp Body.cpp Camera.cpp crc32.cpp Entity.cpp Model.cpp Shader.c
 
 # use some O flag to speed up when shit is working
 cFlags 	= -c -Wall -g
-ldFlags = -lassimp
+ldFlags = -lassimp -lfreeimage
 objDir  = obj/
 srcDir  = src/
 binDir 	=
