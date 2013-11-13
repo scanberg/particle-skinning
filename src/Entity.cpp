@@ -25,6 +25,7 @@ void Entity::translate(const glm::vec3 & translation)
 
 void Entity::move(const glm::vec3 & move)
 {
+	// Maybe R-1 should be used
 	glm::mat3 R = glm::mat3_cast(m_transform.getOrientation());
 	translate(R * move);
 }

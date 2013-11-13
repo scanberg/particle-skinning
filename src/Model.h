@@ -14,7 +14,7 @@
 class Model : public Entity
 {
 public:
-	Model(Body * body, Material * material);
+	Model(Body * body, Material ** material = NULL, unsigned int materialCount = 0);
 	~Model();
 
 	// Animation functionality
@@ -28,11 +28,15 @@ public:
 
 	void assignMaterialToPart(Material * mat, StringHash part);
 	void assignMaterialToAll(Material * mat);
+	void assignMaterial(const char * filename);
+
+	void draw();
+
 private:
 	Transform		m_transform;
 
 	Body *			m_body;
 
-	Material *		m_material;
+	Material **		m_material;
 	unsigned int 	m_materialCount;
 };

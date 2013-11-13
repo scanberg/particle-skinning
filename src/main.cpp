@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "Body.h"
+#include "Model.h"
 #include "Shader.h"
 #include "Camera.h"
 
@@ -19,7 +20,9 @@ int main()
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
 
-	Body bob( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
+	Body bobMesh( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
+
+    Model bob( &bobMesh );
 
     Shader basicShader;
     basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
@@ -34,6 +37,7 @@ int main()
         !glfwGetKey(g_window, GLFW_KEY_ESCAPE))
     {
         /* Render here */
+        bob.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
