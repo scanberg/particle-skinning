@@ -1,4 +1,7 @@
+#include <GL/glew.h>
+
 #include "Model.h"
+
 
 Model::Model(Body * body, Material ** material, unsigned int materialCount)
 {
@@ -40,12 +43,10 @@ void Model::assignMaterialToPart(Material * mat, StringHash part){}
 void Model::assignMaterialToAll(Material * mat){}
 void Model::assignMaterial(const char * filename)
 {
-	
+
 }
 
 void Model::draw()
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_body.getVertexBuffer());
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sVertex), (char*)NULL);
-    glEnableVertexAttribArray(0);
+	m_body->draw();
 }

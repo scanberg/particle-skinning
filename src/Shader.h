@@ -20,6 +20,8 @@ public:
 	void bind();
 	void unbind();
 
+	int getUniformLocation(const char * uniform);
+
 private:
 	static Shader * s_boundShader;
 	GLuint m_program;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include "Body.h"
 #include "Material.h"
 #include "Entity.h"
@@ -33,6 +32,7 @@ public:
 	void draw();
 
 private:
+	unsigned int 	m_vao;
 	Transform		m_transform;
 
 	Body *			m_body;

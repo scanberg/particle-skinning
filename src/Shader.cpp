@@ -144,7 +144,10 @@ void Shader::bindFragDataLocation(int location, const char * fragData)
 void Shader::bind()
 {
     if(!m_compiled)
+    {
+        printf("shadwer is not compiled \n");
         return;
+    }
 
     glUseProgram(m_program);
     s_boundShader = this;
@@ -154,4 +157,9 @@ void Shader::unbind()
 {
 	glUseProgram(0);
 	s_boundShader = NULL;
+}
+
+int Shader::getUniformLocation(const char * uniform)
+{
+    return glGetUniformLocation(m_program, uniform);
 }

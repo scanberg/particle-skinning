@@ -49,7 +49,7 @@ public:
 	sTriangle * 	getTriangleData();
 	unsigned int	getTriangleCount();
 
-	unsigned int 	getMeshCount();
+	unsigned int 	getPartCount();
 	unsigned int 	getBoneCount();
 	unsigned int 	getAnimationCount();
 
@@ -67,6 +67,7 @@ private:
 	void fillBuffers();
 
 	// GL buffers
+	unsigned int 	m_vao;
 	unsigned int 	m_vb;
 	unsigned int 	m_ib;
 

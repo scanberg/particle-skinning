@@ -28,9 +28,12 @@ Body::Body(const char * meshfile, const char * animfile)
 
 	m_vb = 0;
 	m_ib = 0;
+	m_vao = 0;
 
 	glGenBuffers(1, &m_vb);
 	glGenBuffers(1, &m_ib);
+
+    glGenVertexArrays(1, &m_vao);
 
 	// Start the import on the given file with some example postprocessing
 	// Usually - if speed is not the most important aspect for you - you'll t
@@ -91,9 +94,9 @@ Body::Body(const char * meshfile, const char * animfile)
 		// Get triangle indices
 		for(unsigned int j=0; j<mesh[i]->mNumFaces; ++j) {
 			if(face[j].mNumIndices == 3) {
-				m_triangleData[triangleOffset+j].index[0] = vertexOffset + face[i].mIndices[0];
-				m_triangleData[triangleOffset+j].index[1] = vertexOffset + face[i].mIndices[1];
-				m_triangleData[triangleOffset+j].index[2] = vertexOffset + face[i].mIndices[2];
+				m_triangleData[triangleOffset+j].index[0] = vertexOffset + face[j].mIndices[0];
+				m_triangleData[triangleOffset+j].index[1] = vertexOffset + face[j].mIndices[1];
+				m_triangleData[triangleOffset+j].index[2] = vertexOffset + face[j].mIndices[2];
 			} else {
 				fprintf(stderr, "Faces with != 3 indices not implemented\n");
 			}
@@ -151,9 +154,75 @@ Body::~Body()
 
 void Body::fillBuffers()
 {
+    glBindVertexArray(m_vao);
+    
 	glBindBuffer(GL_ARRAY_BUFFER, m_vb);
 	glBufferData(GL_ARRAY_BUFFER, m_vertexCount * sizeof(sVertex), m_vertexData, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_triangleCount * sizeof(sTriangle), m_triangleData, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
+
+	glBindVertexArray(0);
+}
+
+Body::sVertex * Body::getVertexData()
+{
+	return m_vertexData;
+}
+
+unsigned int Body::getVertexCount()
+{
+	return m_vertexCount;
+}
+
+Body::sTriangle * Body::getTriangleData()
+{
+	return m_triangleData;
+}
+
+unsigned int Body::getTriangleCount()
+{
+	return m_triangleCount;
+}
+
+unsigned int Body::getPartCount()
+{
+	return m_partCount;
+}
+
+unsigned int 	Body::getBoneCount()
+{
+	return m_boneCount;
+}
+
+unsigned int 	Body::getAnimationCount()
+{
+	return m_animationCount;
+}
+
+Body::sPart * 	Body::getPart(const StringHash & sh){ return NULL; }
+Transform * 	Body::getBone(const StringHash & sh){return NULL;}
+Animation * 	Body::getAnimation(const StringHash & sh){return NULL;}
+
+unsigned int 	Body::getVertexBuffer()
+{
+	return m_vb;
+}
+unsigned int	Body::getIndexBuffer()
+{
+	return m_ib;
+}
+
+void			Body::draw()
+{
+	glBindVertexArray(m_vao);
+   	glDrawElements(GL_TRIANGLES, 3 * getTriangleCount(), GL_UNSIGNED_INT, 0);
+}
+
+void 			Body::drawPart(unsigned int index)
+{
+
 }

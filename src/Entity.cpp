@@ -38,6 +38,12 @@ void Entity::rotate(const glm::quat & quaternion)
 
 void Entity::rotate(const glm::vec3 & eulerAngles)
 {
-	glm::mat3 R = glm::orientate3(eulerAngles);
+	glm::vec3 xyz(eulerAngles.y, eulerAngles.x, eulerAngles.z);
+	glm::mat3 R = glm::orientate3(xyz);
 	rotate(glm::quat_cast(R));
+}
+
+Transform Entity::getTransform()
+{
+	return m_transform;
 }

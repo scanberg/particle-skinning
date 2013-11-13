@@ -15,6 +15,8 @@ public:
 
 	void rotate(const glm::quat & quaternion);
 	void rotate(const glm::vec3 & eulerAngles);
+
+	Transform getTransform();
 protected:
 	Transform m_transform;
 };
