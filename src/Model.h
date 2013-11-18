@@ -31,10 +31,11 @@ public:
 
 	void draw();
 
-private:
-	unsigned int 	m_vao;
-	Transform		m_transform;
+	Body * 				getBody() { return m_body; }
+	Material ** 		getMaterial() { return m_material; }
+	unsigned int 		getMaterialCount() { return m_materialCount; }
 
+private:
 	Body *			m_body;
 
 	Material **		m_material;

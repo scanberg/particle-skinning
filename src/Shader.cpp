@@ -115,7 +115,7 @@ void Shader::attachShader(GLenum shaderType, const char * filename)
 	glDeleteShader(shader);
 }
 
-void Shader::build()
+void Shader::link()
 {
 	glLinkProgram(m_program);
 
@@ -126,6 +126,8 @@ void Shader::build()
 	{
 		printf("Program link error: \n");
 		printProgramInfoLog(m_program);
+
+        return;
 	}
 
 	m_compiled = true;
@@ -162,4 +164,9 @@ void Shader::unbind()
 int Shader::getUniformLocation(const char * uniform)
 {
     return glGetUniformLocation(m_program, uniform);
+}
+
+int Shader::getAttribLocation(const char * attrib)
+{
+    return glGetAttribLocation(m_program, attrib);
 }

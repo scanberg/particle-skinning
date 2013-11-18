@@ -43,22 +43,23 @@ public:
 
 	bool ImportScene( const aiScene* scene);
 
-	sVertex *		getVertexData();
-	unsigned int 	getVertexCount();
+	sVertex *		getVertexData() { return m_vertexData; }
+	unsigned int 	getVertexCount() { return m_vertexCount; }
 
-	sTriangle * 	getTriangleData();
-	unsigned int	getTriangleCount();
+	sTriangle * 	getTriangleData() { return m_triangleData; }
+	unsigned int	getTriangleCount() { return m_triangleCount; }
 
-	unsigned int 	getPartCount();
-	unsigned int 	getBoneCount();
-	unsigned int 	getAnimationCount();
+	unsigned int 	getPartCount() { return m_partCount; }
+	unsigned int 	getBoneCount() { return m_boneCount; }
+	unsigned int 	getAnimationCount() { return m_animationCount; }
 
 	sPart * 		getPart(const StringHash & sh);
 	Transform * 	getBone(const StringHash & sh);
 	Animation * 	getAnimation(const StringHash & sh);
 
-	unsigned int 	getVertexBuffer();
-	unsigned int	getIndexBuffer();
+	unsigned int 	getVertexArrayObject() { return m_vao; }
+	unsigned int 	getVertexBuffer() { return m_vb; }
+	unsigned int	getIndexBuffer() { return m_ib; }
 
 	void			draw();
 	void 			drawPart(unsigned int index);

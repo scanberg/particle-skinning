@@ -8,6 +8,7 @@
 #include "Model.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "GPUParticleSystem.h"
 
 #define SUCCESS 1
 #define WIDTH 	640
@@ -34,11 +35,32 @@ int main()
     basicShader.bindAttribLocation(0, "in_position");
     basicShader.bindFragDataLocation(0, "out_frag0");
 
-    basicShader.build();
+    basicShader.link();
+
+    Shader particleShader;
+    particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
+
+    const char* varyings[3] = { "out_oldPosition", "out_position", "out_mass" };
+    glTransformFeedbackVaryings(particleShader.getProgram(), 3, varyings, GL_INTERLEAVED_ATTRIBS);
+
+    particleShader.link();
+
+    unsigned int    particleCount = bobMesh.getVertexCount();
+    sParticle *     particleData = new sParticle[particleCount];
+
+    for(unsigned int i=0; i<particleCount; ++i)
+    {
+        const Body::sVertex v = bobMesh.getVertexData()[i];
+        sParticle& p = particleData[i];
+        p.oldPosition = p.position = v.position;
+        p.mass = 1.0f;
+
+    }
+
+    GPUParticleSystem ps(particleData, particleCount, particleShader);
+    delete[] particleData;
 
 	Camera camera;
-
-    glm::mat4 view = glm::translate(glm::mat4(), glm::vec3(0,0,-5));
 
     camera.setPosition(glm::vec3(0,0,5));
 
@@ -63,13 +85,22 @@ int main()
 
         int loc;
         loc = basicShader.getUniformLocation("viewMatrix");
-        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(view * bob.getTransform().getMat4()));
+        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getViewMatrix() * bob.getTransform().getMat4()));
 
         loc = basicShader.getUniformLocation("projMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
 
+        static double oldT = 0.0;
+        double t = glfwGetTime();
+        double dt = t - oldT;
+        oldT = t;
+
+        ps.update((float)dt);
+
         /* Render here */
         bob.draw();
+
+        /* Render with PS vao */
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);

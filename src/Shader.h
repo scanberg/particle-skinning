@@ -12,7 +12,7 @@ public:
 
 	void attachShader(GLenum shaderType, const char * filename);
 
-	void build();
+	void link();
 
 	void bindAttribLocation(int location, const char * attrib);
 	void bindFragDataLocation(int location, const char * fragData);
@@ -21,6 +21,9 @@ public:
 	void unbind();
 
 	int getUniformLocation(const char * uniform);
+	int getAttribLocation(const char * attribute);
+
+	GLuint getProgram() { return m_program; }
 
 private:
 	static Shader * s_boundShader;

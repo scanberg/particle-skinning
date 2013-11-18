@@ -168,61 +168,18 @@ void Body::fillBuffers()
 	glBindVertexArray(0);
 }
 
-Body::sVertex * Body::getVertexData()
-{
-	return m_vertexData;
-}
+Body::sPart * Body::getPart(const StringHash & sh){ return NULL; }
+Transform * Body::getBone(const StringHash & sh){return NULL;}
+Animation * Body::getAnimation(const StringHash & sh){return NULL;}
 
-unsigned int Body::getVertexCount()
-{
-	return m_vertexCount;
-}
-
-Body::sTriangle * Body::getTriangleData()
-{
-	return m_triangleData;
-}
-
-unsigned int Body::getTriangleCount()
-{
-	return m_triangleCount;
-}
-
-unsigned int Body::getPartCount()
-{
-	return m_partCount;
-}
-
-unsigned int 	Body::getBoneCount()
-{
-	return m_boneCount;
-}
-
-unsigned int 	Body::getAnimationCount()
-{
-	return m_animationCount;
-}
-
-Body::sPart * 	Body::getPart(const StringHash & sh){ return NULL; }
-Transform * 	Body::getBone(const StringHash & sh){return NULL;}
-Animation * 	Body::getAnimation(const StringHash & sh){return NULL;}
-
-unsigned int 	Body::getVertexBuffer()
-{
-	return m_vb;
-}
-unsigned int	Body::getIndexBuffer()
-{
-	return m_ib;
-}
-
-void			Body::draw()
+void Body::draw()
 {
 	glBindVertexArray(m_vao);
    	glDrawElements(GL_TRIANGLES, 3 * getTriangleCount(), GL_UNSIGNED_INT, 0);
+   	glBindVertexArray(0);
 }
 
-void 			Body::drawPart(unsigned int index)
+void Body::drawPart(unsigned int index)
 {
 
 }
