@@ -4,12 +4,7 @@
 #include "Animation.h"
 #include "StringHash.h"
 
-#include <assimp/cimport.h>        // Plain-C interface
-#include <assimp/scene.h>          // Output data structure
-#include <assimp/postprocess.h>    // Post processing flags
-
-
-/*	Mesh class
+/*	Body class
  *	Should be considered as a shared resource
  *
  *
@@ -41,8 +36,6 @@ public:
 	Body(const char * meshfile, const char * animfile = NULL);
 	~Body();
 
-	bool ImportScene( const aiScene* scene);
-
 	sVertex *		getVertexData() { return m_vertexData; }
 	unsigned int 	getVertexCount() { return m_vertexCount; }
 
@@ -57,7 +50,7 @@ public:
 	Transform * 	getBone(const StringHash & sh);
 	Animation * 	getAnimation(const StringHash & sh);
 
-	unsigned int 	getVertexArrayObject() { return m_vao; }
+	unsigned int 	getVertexArray() { return m_va; }
 	unsigned int 	getVertexBuffer() { return m_vb; }
 	unsigned int	getIndexBuffer() { return m_ib; }
 
@@ -68,7 +61,7 @@ private:
 	void fillBuffers();
 
 	// GL buffers
-	unsigned int 	m_vao;
+	unsigned int 	m_va;
 	unsigned int 	m_vb;
 	unsigned int 	m_ib;
 

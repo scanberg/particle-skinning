@@ -1,10 +1,9 @@
 #include "Body.h"
-#include <GL/glew.h>
 
-bool ImportScene( const aiScene* scene)
-{
-	return true;
-}
+#include <GL/glew.h>
+#include <assimp/cimport.h>        // Plain-C interface
+#include <assimp/scene.h>          // Output data structure
+#include <assimp/postprocess.h>    // Post processing flags
 
 Body::Body(const char * meshfile, const char * animfile)
 {
@@ -28,12 +27,11 @@ Body::Body(const char * meshfile, const char * animfile)
 
 	m_vb = 0;
 	m_ib = 0;
-	m_vao = 0;
+	m_va = 0;
 
 	glGenBuffers(1, &m_vb);
 	glGenBuffers(1, &m_ib);
-
-    glGenVertexArrays(1, &m_vao);
+    glGenVertexArrays(1, &m_va);
 
 	// Start the import on the given file with some example postprocessing
 	// Usually - if speed is not the most important aspect for you - you'll t
@@ -150,11 +148,12 @@ Body::~Body()
 
 	glDeleteBuffers(1, &m_vb);
 	glDeleteBuffers(1, &m_ib);
+	glDeleteVertexArrays(1, &m_va);
 }
 
 void Body::fillBuffers()
 {
-    glBindVertexArray(m_vao);
+    glBindVertexArray(m_va);
     
 	glBindBuffer(GL_ARRAY_BUFFER, m_vb);
 	glBufferData(GL_ARRAY_BUFFER, m_vertexCount * sizeof(sVertex), m_vertexData, GL_STATIC_DRAW);
@@ -174,7 +173,7 @@ Animation * Body::getAnimation(const StringHash & sh){return NULL;}
 
 void Body::draw()
 {
-	glBindVertexArray(m_vao);
+	glBindVertexArray(m_va);
    	glDrawElements(GL_TRIANGLES, 3 * getTriangleCount(), GL_UNSIGNED_INT, 0);
    	glBindVertexArray(0);
 }

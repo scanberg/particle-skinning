@@ -17,6 +17,8 @@
 int initGL(int width, int height);
 void initGeom(unsigned int &vao, unsigned int &vbo);
 
+double calcDT();
+
 GLFWwindow * g_window;
 
 int main()
@@ -40,7 +42,11 @@ int main()
     Shader particleShader;
     particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
 
-    const char* varyings[3] = { "out_oldPosition", "out_position", "out_mass" };
+    particleShader.bindAttribLocation(0, "in_position");
+    particleShader.bindAttribLocation(1, "in_oldPosition");
+    particleShader.bindAttribLocation(2, "in_mass");
+
+    const char* varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
     glTransformFeedbackVaryings(particleShader.getProgram(), 3, varyings, GL_INTERLEAVED_ATTRIBS);
 
     particleShader.link();
@@ -54,11 +60,13 @@ int main()
         sParticle& p = particleData[i];
         p.oldPosition = p.position = v.position;
         p.mass = 1.0f;
-
     }
 
     GPUParticleSystem ps(particleData, particleCount, particleShader);
     delete[] particleData;
+
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
 
 	Camera camera;
 
@@ -73,7 +81,11 @@ int main()
         !glfwGetKey(g_window, GLFW_KEY_Q) &&
         !glfwGetKey(g_window, GLFW_KEY_ESCAPE))
     {
+        double dt = calcDT();
+
         bob.rotate(glm::vec3(0,0,0.01));
+
+        ps.update((float)dt);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, 640, 480);
@@ -90,17 +102,24 @@ int main()
         loc = basicShader.getUniformLocation("projMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
 
-        static double oldT = 0.0;
-        double t = glfwGetTime();
-        double dt = t - oldT;
-        oldT = t;
-
-        ps.update((float)dt);
-
         /* Render here */
-        bob.draw();
+        //bob.draw();
 
-        /* Render with PS vao */
+        /* Render model with PS vao */
+        Body * b = bob.getBody();
+
+        //printf("vb: %i \n", ps.getSourceVB());
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, ps.getSourceVB());
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), (const GLvoid*)0);
+
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
+        //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_POINTS, 0, ps.getParticleCount());
+        glBindVertexArray(0);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
@@ -155,4 +174,14 @@ int initGL(int width, int height)
     printf("GLSL version %s \n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 	return SUCCESS;
+}
+
+double calcDT()
+{
+    static double oldT = 0.0;
+    double t = glfwGetTime();
+    double dt = t - oldT;
+    oldT = t;
+
+    return dt;
 }

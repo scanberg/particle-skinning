@@ -13,6 +13,7 @@ public:
 	void attachShader(GLenum shaderType, const char * filename);
 
 	void link();
+	void validate();
 
 	void bindAttribLocation(int location, const char * attrib);
 	void bindFragDataLocation(int location, const char * fragData);

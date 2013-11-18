@@ -21,14 +21,20 @@ public:
 
 	void update(float dt);
 
+	unsigned int getSourceVA() { return m_va[!m_target]; }
+	unsigned int getTargetVA() { return m_va[m_target]; }
+
 	unsigned int getSourceVB() { return m_vb[!m_target]; }
 	unsigned int getTargetVB() { return m_vb[m_target]; }
+
+	unsigned int getParticleCount() { return m_particleCount; }
 private:
 	void swapTarget(){ m_target = !m_target; }
 
 	glm::vec3 m_staticAcc;
 	glm::vec3 m_staticForce;
 
+	unsigned int 	m_va[2];
 	unsigned int 	m_vb[2];
 	unsigned int 	m_particleCount;
 

@@ -133,6 +133,22 @@ void Shader::link()
 	m_compiled = true;
 }
 
+void Shader::validate()
+{
+    glValidateProgram(m_program);
+
+    GLint status;
+    glGetProgramiv(m_program, GL_VALIDATE_STATUS, &status);
+
+    if(status != GL_TRUE)
+    {
+        printf("Program validation error: \n");
+        printProgramInfoLog(m_program);
+
+        return;
+    }
+}
+
 void Shader::bindAttribLocation(int location, const char * attrib)
 {
 	glBindAttribLocation(m_program, location, attrib);
