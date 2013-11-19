@@ -10,8 +10,12 @@ public:
 	ParticleSkinnedModel(Shader * particleShader, Body * body, Material ** mat = NULL, unsigned int materialCount = 0);
 	~ParticleSkinnedModel();
 
+	void addRandomImpulse(float impulse) { m_ps.addRandomImpulse(impulse); }
+
 	void update(float dt);
 	void draw();
+
 protected:
+
 	GPUParticleSystem m_ps;
 };

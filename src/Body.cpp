@@ -37,6 +37,7 @@ Body::Body(const char * meshfile, const char * animfile)
 	// Usually - if speed is not the most important aspect for you - you'll t
 	// probably to request more postprocessing than we do in this example.
 	const aiScene* scene = aiImportFile(meshfile, 
+	aiProcess_GenSmoothNormals		 |
 	aiProcess_CalcTangentSpace       | 
 	aiProcess_Triangulate            |
 	aiProcess_JoinIdenticalVertices  |
@@ -72,21 +73,25 @@ Body::Body(const char * meshfile, const char * animfile)
 	aiMesh** mesh = scene->mMeshes;
 	//aiBone** bone;
 	aiVector3D* vertex;
+	aiVector3D* normal;
+	//aiVector3D** texCoord;
 	aiFace* face;
 	aiVertexWeight** weight;
 
 	unsigned int vertexOffset = 0, triangleOffset = 0;
 
 	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
-		vertex = mesh[i]->mVertices;
-		face   = mesh[i]->mFaces;
+		vertex		= mesh[i]->mVertices;
+		normal		= mesh[i]->mNormals;
+		//texCoord	= mesh[i]->mTextureCoords;
+		face		= mesh[i]->mFaces;
 		//bone = mesh[i]->mBones;
 
 		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
-			m_vertexData[vertexOffset+j].position.x = vertex[j][0];
-			m_vertexData[vertexOffset+j].position.y = vertex[j][1];
-			m_vertexData[vertexOffset+j].position.z = vertex[j][2];
+			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j][0],	vertex[j][1],	vertex[j][2]);
+			m_vertexData[vertexOffset + j].normal	= glm::vec3(normal[j][0],	normal[j][1],	normal[j][2]);
+			//m_vertexData[vertexOffset + j].texCoord = glm::vec2(texCoord[j][0][0], texCoord[j][0][1]);
 		}
 
 		// Get triangle indices

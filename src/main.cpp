@@ -58,16 +58,33 @@ int main()
     bob.setPosition(glm::vec3(0,-3,0));
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(g_window) &&
-        !glfwGetKey(g_window, GLFW_KEY_Q) &&
-        !glfwGetKey(g_window, GLFW_KEY_ESCAPE))
-    {
+	while (!glfwWindowShouldClose(g_window) &&
+		!glfwGetKey(g_window, GLFW_KEY_Q) &&
+		!glfwGetKey(g_window, GLFW_KEY_ESCAPE))
+	{
 		int loc;
 
-        double dt = calcDT();
+		double dt = calcDT();
 
-        bob.rotate(glm::vec3(0,0,0.01));
+		static double t = 0.0;
+		static unsigned int f = 0;
+		t += dt;
+		++f;
 
+		if (t > 0.5)
+		{
+			char title[256];
+			sprintf(title, "FPS %.2f", f / t);
+			glfwSetWindowTitle(g_window, title);
+
+			t = 0.0;
+			f = 0;
+		}
+
+		if (glfwGetKey(g_window, GLFW_KEY_SPACE))
+			bob.addRandomImpulse(5.0f);
+
+        bob.rotate(glm::vec3(0,0,dt));
         bob.update((float)dt);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

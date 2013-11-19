@@ -1,10 +1,15 @@
+#include <glm/gtc/random.hpp>
+
 #include "GPUParticleSystem.h"
+
+const float TARGET_TIME = (float)(1.0 / 60.0);
 
 GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader)
 {
 	assert(shader);
 	assert(particleData);
 
+	m_time = 0;
 	m_va[0] = m_va[1] = 0;
 	m_vb[0] = m_vb[1] = 0;
 	m_particleCount = particleCount;
@@ -29,10 +34,11 @@ GPUParticleSystem::GPUParticleSystem(Body * body, Shader * shader)
     {
         const Body::sVertex v = body->getVertexData()[i];
         sParticle& p = particleData[i];
-        p.oldPosition = p.position = v.position;
-        p.mass = 1.0f;
+		p.oldPosition = p.position = v.position;
+		p.mass = 0.1f;
     }
 
+	m_time = 0;
 	m_va[0] = m_va[1] = 0;
 	m_vb[0] = m_vb[1] = 0;
 	m_particleCount = particleCount;
@@ -52,13 +58,33 @@ GPUParticleSystem::~GPUParticleSystem()
 	glDeleteBuffers(2, m_vb);
 }
 
+void GPUParticleSystem::addRandomImpulse(float impulse)
+{
+	m_randomForceAccumulator += impulse / TARGET_TIME;
+}
+
 void GPUParticleSystem::update(float dt)
 {
+	m_time += dt;
+
+	//if (m_time < TARGET_TIME)
+	//	return;
+
+	m_time = 0;
+
 	m_shader->bind();
 
 	glEnable(GL_RASTERIZER_DISCARD);
 
 	glBindVertexArray(m_va[m_target]);
+
+	int loc = m_shader->getUniformLocation("dt");
+	glUniform1f(loc, TARGET_TIME);
+
+	loc = m_shader->getUniformLocation("randomForce");
+	glUniform1f(loc, m_randomForceAccumulator);
+
+	m_randomForceAccumulator = 0.0f;
 
 	m_shader->validate();
 
