@@ -2,15 +2,17 @@
 
 Material::Material(const char* imfile)
 {
-
+	/*
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(imfile);
-	FIBITMAP* img = = FreeImage_Load(format, imfile);
+	FIBITMAP* img = FreeImage_Load(format, imfile);
 	unsigned int height, width;
 	height = FreeImage_GetHeight(img);
 	width  = FreeImage_GetWidth(img);
 
 	mDiffuse = (char*)FreeImage_GetBits(img);
 	subscribers = 1;
+
+	*/
 
 	//printf("Antal %i \n", (int) scene->mMaterials[0]->GetTextureCount(aiTextureType_DIFFUSE));
 	//aiString tgafile;
@@ -28,7 +30,7 @@ Material::~Material()
 char*& Material::subscribe()
 {
 	subscribers += 1;
-	return &mDiffuse
+	return mDiffuse;
 }
 
 void Material::unsubscribe()

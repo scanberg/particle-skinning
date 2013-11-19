@@ -18,5 +18,5 @@ private:
 	//Texture2D* mSpecular;
 	//Texture2D* mAmbient;
 	//Texture2D* mNormal;
-	unsigned int* subscribers;
+	unsigned int subscribers;
 };

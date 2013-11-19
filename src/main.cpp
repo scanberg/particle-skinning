@@ -81,9 +81,19 @@ int main()
         !glfwGetKey(g_window, GLFW_KEY_Q) &&
         !glfwGetKey(g_window, GLFW_KEY_ESCAPE))
     {
+		int loc;
+
         double dt = calcDT();
 
         bob.rotate(glm::vec3(0,0,0.01));
+
+		particleShader.bind();
+
+		loc = particleShader.getUniformLocation("modelMatrix");
+		glUniformMatrix4fv(loc, 1, false, glm::value_ptr(bob.getTransform().getMat4()));
+
+		loc = particleShader.getUniformLocation("invModelMatrix");
+		glUniformMatrix4fv(loc, 1, false, glm::value_ptr(bob.getTransform().getInvMat4()));
 
         ps.update((float)dt);
 
@@ -95,7 +105,6 @@ int main()
 
         basicShader.bind();
 
-        int loc;
         loc = basicShader.getUniformLocation("viewMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getViewMatrix() * bob.getTransform().getMat4()));
 
@@ -110,14 +119,10 @@ int main()
 
         //printf("vb: %i \n", ps.getSourceVB());
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, ps.getSourceVB());
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), (const GLvoid*)0);
-
+        glBindVertexArray(ps.getTargetVA());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
         //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
+
         glDrawArrays(GL_POINTS, 0, ps.getParticleCount());
         glBindVertexArray(0);
 
@@ -157,6 +162,7 @@ int initGL(int width, int height)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(g_window);
+	glfwSwapInterval(1);
 
     glewExperimental = GL_TRUE;
 	GLenum error = glewInit();
