@@ -88,6 +88,8 @@ void GPUParticleSystem::update(float dt)
 
 	m_shader->validate();
 
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[!m_target]);
+
 	// Perform GPU advection:
 	glBeginTransformFeedback(GL_POINTS);
 	glDrawArrays(GL_POINTS, 0, m_particleCount);
@@ -98,7 +100,7 @@ void GPUParticleSystem::update(float dt)
 	glDisable(GL_RASTERIZER_DISCARD);
 
 	// Swap the A and B buffers for ping-ponging
-	//swapTarget();
+	swapTarget();
 }
 
 void GPUParticleSystem::initData(sParticle * particleData, unsigned int particleCount)
@@ -120,8 +122,6 @@ void GPUParticleSystem::initData(sParticle * particleData, unsigned int particle
 		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
 		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
 		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
-
-		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[1]);
 	glBindVertexArray(0);
 	
 	glBindVertexArray(m_va[1]);
@@ -135,7 +135,5 @@ void GPUParticleSystem::initData(sParticle * particleData, unsigned int particle
 		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
 		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
 		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
-
-		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[0]);
 	glBindVertexArray(0);
 }
