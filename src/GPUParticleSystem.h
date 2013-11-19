@@ -3,11 +3,13 @@
 #include <GL/glew.h>
 #include "ParticleSystem.h"
 #include "Shader.h"
+#include "Body.h"
 
 class GPUParticleSystem : public ParticleSystem
 {
 public:
-	GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader& shader);
+	GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader);
+	GPUParticleSystem(Body * body, Shader * shader);
 	~GPUParticleSystem();
 
 	void setStaticAcceleration(const glm::vec3 &acc);
@@ -21,14 +23,17 @@ public:
 
 	void update(float dt);
 
-	unsigned int getSourceVA() { return m_va[!m_target]; }
-	unsigned int getTargetVA() { return m_va[m_target]; }
+	Shader * 		getShader() { return m_shader; }
 
-	unsigned int getSourceVB() { return m_vb[!m_target]; }
-	unsigned int getTargetVB() { return m_vb[m_target]; }
+	unsigned int 	getSourceVA() { return m_va[!m_target]; }
+	unsigned int 	getTargetVA() { return m_va[m_target]; }
 
-	unsigned int getParticleCount() { return m_particleCount; }
+	unsigned int 	getSourceVB() { return m_vb[!m_target]; }
+	unsigned int 	getTargetVB() { return m_vb[m_target]; }
+
+	unsigned int 	getParticleCount() { return m_particleCount; }
 private:
+	void initData(sParticle * particleData, unsigned int particleCount);
 	void swapTarget(){ m_target = !m_target; }
 
 	glm::vec3 m_staticAcc;

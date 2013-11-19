@@ -1,5 +1,5 @@
 main 	= main.cpp
-src		= Animation.cpp Body.cpp Camera.cpp crc32.cpp Entity.cpp GPUParticleSystem.cpp Model.cpp Shader.cpp Transform.cpp
+src		= Animation.cpp Body.cpp Camera.cpp crc32.cpp Entity.cpp GPUParticleSystem.cpp Model.cpp ParticleSkinnedModel.cpp Shader.cpp Transform.cpp
 
 # use some O flag to speed up when shit is working
 cFlags 	= -c -Wall -g

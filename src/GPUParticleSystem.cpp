@@ -1,17 +1,83 @@
 #include "GPUParticleSystem.h"
 
-GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader& shader)
+GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader)
 {
+	assert(shader);
+	assert(particleData);
+
 	m_va[0] = m_va[1] = 0;
 	m_vb[0] = m_vb[1] = 0;
 	m_particleCount = particleCount;
 	m_target = 0;
-	m_shader = &shader;
-
-	char* pOffset = 0;
+	m_shader = shader;	
 
 	glGenVertexArrays(2, m_va);
 	glGenBuffers(2, m_vb);
+
+	initData(particleData, particleCount);
+}
+
+GPUParticleSystem::GPUParticleSystem(Body * body, Shader * shader)
+{
+	assert(body);
+	assert(shader);
+
+    unsigned int    particleCount = body->getVertexCount();
+    sParticle *     particleData = new sParticle[particleCount];
+
+    for(unsigned int i=0; i<particleCount; ++i)
+    {
+        const Body::sVertex v = body->getVertexData()[i];
+        sParticle& p = particleData[i];
+        p.oldPosition = p.position = v.position;
+        p.mass = 1.0f;
+    }
+
+	m_va[0] = m_va[1] = 0;
+	m_vb[0] = m_vb[1] = 0;
+	m_particleCount = particleCount;
+	m_target = 0;
+	m_shader = shader;
+
+	glGenVertexArrays(2, m_va);
+	glGenBuffers(2, m_vb);
+
+	initData(particleData, particleCount);
+
+	delete[] particleData;
+}
+
+GPUParticleSystem::~GPUParticleSystem()
+{
+	glDeleteBuffers(2, m_vb);
+}
+
+void GPUParticleSystem::update(float dt)
+{
+	m_shader->bind();
+
+	glEnable(GL_RASTERIZER_DISCARD);
+
+	glBindVertexArray(m_va[m_target]);
+
+	m_shader->validate();
+
+	// Perform GPU advection:
+	glBeginTransformFeedback(GL_POINTS);
+	glDrawArrays(GL_POINTS, 0, m_particleCount);
+	glEndTransformFeedback();
+
+	glBindVertexArray(0);
+
+	glDisable(GL_RASTERIZER_DISCARD);
+
+	// Swap the A and B buffers for ping-ponging
+	//swapTarget();
+}
+
+void GPUParticleSystem::initData(sParticle * particleData, unsigned int particleCount)
+{
+	char* pOffset = 0;
 
 	int positionAttr 	= m_shader->getAttribLocation("in_position");
 	int oldPositionAttr = m_shader->getAttribLocation("in_oldPosition");
@@ -46,32 +112,4 @@ GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int part
 
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[0]);
 	glBindVertexArray(0);
-}
-
-GPUParticleSystem::~GPUParticleSystem()
-{
-	glDeleteBuffers(2, m_vb);
-}
-
-void GPUParticleSystem::update(float dt)
-{
-	m_shader->bind();
-
-	glEnable(GL_RASTERIZER_DISCARD);
-
-	glBindVertexArray(m_va[m_target]);
-
-	m_shader->validate();
-
-	// Perform GPU advection:
-	glBeginTransformFeedback(GL_POINTS);
-	glDrawArrays(GL_POINTS, 0, m_particleCount);
-	glEndTransformFeedback();
-
-	glBindVertexArray(0);
-
-	glDisable(GL_RASTERIZER_DISCARD);
-
-	// Swap the A and B buffers for ping-ponging
-	//swapTarget();
 }

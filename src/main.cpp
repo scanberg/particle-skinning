@@ -9,6 +9,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "GPUParticleSystem.h"
+#include "ParticleSkinnedModel.h"
 
 #define SUCCESS 1
 #define WIDTH 	640
@@ -26,14 +27,9 @@ int main()
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
 
-	Body bobMesh( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
-
-    Model bob( &bobMesh );
-
     Shader basicShader;
     basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
     basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
-
     basicShader.bindAttribLocation(0, "in_position");
     basicShader.bindFragDataLocation(0, "out_frag0");
 
@@ -41,32 +37,17 @@ int main()
 
     Shader particleShader;
     particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
-
     particleShader.bindAttribLocation(0, "in_position");
     particleShader.bindAttribLocation(1, "in_oldPosition");
     particleShader.bindAttribLocation(2, "in_mass");
-
     const char* varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
     glTransformFeedbackVaryings(particleShader.getProgram(), 3, varyings, GL_INTERLEAVED_ATTRIBS);
 
     particleShader.link();
 
-    unsigned int    particleCount = bobMesh.getVertexCount();
-    sParticle *     particleData = new sParticle[particleCount];
+    Body bobMesh( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
 
-    for(unsigned int i=0; i<particleCount; ++i)
-    {
-        const Body::sVertex v = bobMesh.getVertexData()[i];
-        sParticle& p = particleData[i];
-        p.oldPosition = p.position = v.position;
-        p.mass = 1.0f;
-    }
-
-    GPUParticleSystem ps(particleData, particleCount, particleShader);
-    delete[] particleData;
-
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
+    ParticleSkinnedModel bob( &particleShader, &bobMesh );
 
 	Camera camera;
 
@@ -87,15 +68,7 @@ int main()
 
         bob.rotate(glm::vec3(0,0,0.01));
 
-		particleShader.bind();
-
-		loc = particleShader.getUniformLocation("modelMatrix");
-		glUniformMatrix4fv(loc, 1, false, glm::value_ptr(bob.getTransform().getMat4()));
-
-		loc = particleShader.getUniformLocation("invModelMatrix");
-		glUniformMatrix4fv(loc, 1, false, glm::value_ptr(bob.getTransform().getInvMat4()));
-
-        ps.update((float)dt);
+        bob.update((float)dt);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, 640, 480);
@@ -112,19 +85,7 @@ int main()
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
 
         /* Render here */
-        //bob.draw();
-
-        /* Render model with PS vao */
-        Body * b = bob.getBody();
-
-        //printf("vb: %i \n", ps.getSourceVB());
-
-        glBindVertexArray(ps.getTargetVA());
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
-        //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
-
-        glDrawArrays(GL_POINTS, 0, ps.getParticleCount());
-        glBindVertexArray(0);
+        bob.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);

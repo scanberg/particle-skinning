@@ -14,7 +14,7 @@ class Model : public Entity
 {
 public:
 	Model(Body * body, Material ** material = NULL, unsigned int materialCount = 0);
-	~Model();
+	virtual ~Model();
 
 	// Animation functionality
 	void setAnimation(const char * animation);
@@ -35,7 +35,7 @@ public:
 	Material ** 		getMaterial() { return m_material; }
 	unsigned int 		getMaterialCount() { return m_materialCount; }
 
-private:
+protected:
 	Body *			m_body;
 
 	Material **		m_material;
