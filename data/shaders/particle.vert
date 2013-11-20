@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // from http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 
