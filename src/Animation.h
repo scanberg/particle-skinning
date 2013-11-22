@@ -27,7 +27,7 @@ public:
 	m_frameCount(frameCount)
 	{
 		m_channel = (AnimationChannel*) malloc(sizeof(AnimationChannel) * m_channelCount);
-		for(int i=0; i<m_channelCount; ++i)
+		for(unsigned int i=0; i<m_channelCount; ++i)
 			m_channel[i] = AnimationChannel(m_frameCount);
 	}
 

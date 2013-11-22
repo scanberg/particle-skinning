@@ -132,12 +132,22 @@ Body::Body(const char * meshfile, const char * animfile)
 	
 	// If we have a separate animation file
 	m_animationCount = scene->mNumAnimations;
-	m_animationData  = new Animation[m_animationCount];
+	m_animationData  = (Animation*) malloc(sizeof(Animation)*m_animationCount);
 	m_animationSH    = (StringHash*) malloc(sizeof(StringHash)*m_animationCount);
 
 	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
 		//printf("%s\n", scene->mAnimations[i]->mName.C_Str());
 		m_animationSH[i] = StringHash(scene->mAnimations[i]->mName.C_Str());
+		m_animationData[i] = Animation(scene->mAnimations[i]->mNumChannels,(unsigned int)scene->mAnimations[i]->mTicksPerSecond);
+		for(unsigned int j=0; j<scene->mAnimations[i]->mNumChannels; ++j) {
+			printf("%d %d %d\n", scene->mAnimations[i]->mChannels[j]->mNumPositionKeys, scene->mAnimations[i]->mChannels[j]->mNumRotationKeys, scene->mAnimations[i]->mChannels[j]->mNumScalingKeys);
+			//for(unsigned int k=0; k<scene->mAnimations[i]->mChannels[j]->; ++j) {
+			//glm::vec3 poskey = glm::
+			//m_animationData[i].getChannel(j)->m_pose.setTranslation( scene->mAnimations[i]->mChannels[j].mPositionKeys );
+			//m_animationData[i].m_pose.setOrientation( scene->mAnimations[i]->mChannels[j].mRotationKeys );
+			//m_animationData[i].m_pose.setScale(       scene->mAnimations[i]->mChannels[j].mScalingKeys );
+		}
+
 	}
 
 	aiReleaseImport(scene);
