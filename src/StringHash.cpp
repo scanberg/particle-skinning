@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-StringHash::StringHash(const char * str)
+StringHash::StringHash(const char * const str)
 {
 	m_str[27] = '\0';
 
