@@ -13,19 +13,20 @@ class Body
 {
 public:
 
-	typedef struct
+	struct sVertex
 	{
+		sVertex() : index(glm::ivec4(-1)) {};
 		glm::vec3 	position;
 		glm::vec3 	normal;
 		glm::vec2 	texCoord;
 		glm::ivec4 	index;
 		glm::vec4 	weight;
-	}sVertex;
+	};
 
-	typedef struct
+	struct sTriangle
 	{
 		unsigned int index[3];
-	}sTriangle;
+	};
 
 	typedef struct
 	{

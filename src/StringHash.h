@@ -3,7 +3,7 @@
 class StringHash
 {
 public:
-	StringHash(const char * str);
+	StringHash(const char * const str);
 
 	inline const char * getStr()
 	{ return m_str; }
