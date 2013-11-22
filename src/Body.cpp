@@ -4,6 +4,7 @@
 #include <assimp/cimport.h>        // Plain-C interface
 #include <assimp/scene.h>          // Output data structure
 #include <assimp/postprocess.h>    // Post processing flags
+#include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
 
 Body::Body(const char * meshfile, const char * animfile)
 {
@@ -68,7 +69,7 @@ Body::Body(const char * meshfile, const char * animfile)
 	m_triangleData  = new sTriangle[m_triangleCount];
 	m_boneData      = new Transform[m_boneCount];
 	//m_animationData = new Animation[m_animationCount];
-	m_boneSH        = new StringHash[m_boneCount];
+	m_boneSH        = (StringHash*) malloc(sizeof(StringHash)*m_boneCount);
 
 	// Read mesh data
 	aiMesh** mesh = scene->mMeshes;
@@ -107,8 +108,21 @@ Body::Body(const char * meshfile, const char * animfile)
 		}
 		// Get bones
 		for(unsigned int j=0; j<mesh[i]->mNumBones; ++j) {
-			m_boneSH[boneOffset+j] = StringHash(bone[j].mName.C_Str());
-			//m_boneData[boneOffset+j].
+			m_boneSH[boneOffset+j]   = StringHash(bone[j]->mName.C_Str());
+			m_boneData[boneOffset+j] = Transform(glm::make_mat4( (float*)(bone[j]->mOffsetMatrix[0])) );
+
+			for(unsigned int k=0; k<bone[j]->mNumWeights; ++k) {
+				const aiVertexWeight& vw = bone[j]->mWeights[k];
+
+				for(unsigned int l=0; l<4; ++l) {
+					sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
+					if(v.index[l] != -1) {
+						v.index[l]  = boneOffset+j;
+						v.weight[l] = vw.mWeight;
+						break;
+					}
+				}
+			}
 		}
 
 		vertexOffset   += mesh[i]->mNumVertices;
