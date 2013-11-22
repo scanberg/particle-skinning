@@ -2,17 +2,22 @@
 
 #include "Transform.h"
 
-typedef struct
+class AnimationChannel
 {
-	Transform 		pose;
-	unsigned int 	frameNumber;
-}sAnimationKeyFrame;
+	public:
+	AnimationChannel(unsigned int frameCount)
+	{
+		m_frameCount = frameCount;
+		m_pose = new Transform[frameCount];
+	}
+	~AnimationChannel()
+	{
+		delete[] m_pose;
+	}
 
-typedef struct
-{
-	sAnimationKeyFrame *	keyFrame;
-	unsigned int 			keyFrameCount;
-}sAnimationChannel;
+	Transform * 	m_pose;
+	unsigned int 	m_frameCount;
+};
 
 class Animation
 {
@@ -20,7 +25,7 @@ public:
 	Animation();
 	~Animation();
 private:
-	sAnimationChannel * m_channel;
+	AnimationChannel *	m_channel;
 	unsigned int		m_channelCount;
 
 	unsigned int 		m_framesPerSecond;
