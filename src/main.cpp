@@ -14,9 +14,11 @@
 #define SUCCESS 1
 #define WIDTH 	640
 #define HEIGHT 	480
+#define TIMESTAMPS 3
 
 int initGL(int width, int height);
 void initGeom(unsigned int &vao, unsigned int &vbo);
+void setWindowTitle(unsigned int * queryID, double dt);
 
 double calcDT();
 
@@ -57,6 +59,10 @@ int main()
     bob.setScale(glm::vec3(0.1));
     bob.setPosition(glm::vec3(0,-3,0));
 
+    // queries for accurate profiling of opengl calls.
+    unsigned int queryID[TIMESTAMPS];
+    glGenQueries(TIMESTAMPS, queryID);
+
     /* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(g_window) &&
 		!glfwGetKey(g_window, GLFW_KEY_Q) &&
@@ -65,27 +71,17 @@ int main()
 		int loc;
 
 		double dt = calcDT();
+        static double t = 0;
+        t += dt;
 
-		static double t = 0.0;
-		static unsigned int f = 0;
-		t += dt;
-		++f;
+		//if (glfwGetKey(g_window, GLFW_KEY_SPACE))
+            bob.rotate(glm::vec3(0,0,3*glm::cos(2.0*t)*dt));
 
-		if (t > 0.5)
-		{
-			char title[256];
-			sprintf(title, "FPS %.2f", f / t);
-			glfwSetWindowTitle(g_window, title);
+		//bob.addRandomImpulse(5.0f);
 
-			t = 0.0;
-			f = 0;
-		}
-
-		if (glfwGetKey(g_window, GLFW_KEY_SPACE))
-			bob.addRandomImpulse(5.0f);
-
-        bob.rotate(glm::vec3(0,0,dt));
+        glQueryCounter(queryID[0], GL_TIMESTAMP);
         bob.update((float)dt);
+        glQueryCounter(queryID[1], GL_TIMESTAMP);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, 640, 480);
@@ -96,7 +92,7 @@ int main()
         basicShader.bind();
 
         loc = basicShader.getUniformLocation("viewMatrix");
-        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getViewMatrix() * bob.getTransform().getMat4()));
+        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getViewMatrix()));
 
         loc = basicShader.getUniformLocation("projMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
@@ -104,8 +100,12 @@ int main()
         /* Render here */
         bob.draw();
 
+        glQueryCounter(queryID[2], GL_TIMESTAMP);
+
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
+
+        setWindowTitle(queryID, dt);
 
         /* Poll for and process events */
         glfwPollEvents();
@@ -140,7 +140,7 @@ int initGL(int width, int height)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(g_window);
-	glfwSwapInterval(1);
+	//glfwSwapInterval(1);
 
     glewExperimental = GL_TRUE;
 	GLenum error = glewInit();
@@ -168,4 +168,30 @@ double calcDT()
     oldT = t;
 
     return dt;
+}
+
+void setWindowTitle(unsigned int * queryID, double dt)
+{
+    static double t = 0.0;
+    static unsigned int f = 0;
+    t += dt;
+    ++f;
+
+    if (t > 0.5)
+    {
+        GLuint64 timeStamp[3];
+
+        for(int i=0; i<TIMESTAMPS; ++i)
+            glGetQueryObjectui64v(queryID[i], GL_QUERY_RESULT, &timeStamp[i]);
+
+        double physics  = (timeStamp[1] - timeStamp[0]) / 1000000.0;
+        double render   = (timeStamp[2] - timeStamp[1]) / 1000000.0;
+
+        char title[256];
+        sprintf(title, "FPS %i, time (ms): physics %.5f, rander %.5f", (int)(f / t), physics, render);
+        glfwSetWindowTitle(g_window, title);
+
+        t = 0.0;
+        f = 0;
+    }
 }

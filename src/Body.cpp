@@ -75,17 +75,17 @@ Body::Body(const char * meshfile, const char * animfile)
 	aiBone** bone;
 	aiVector3D* vertex;
 	aiVector3D* normal;
-	//aiVector3D** texCoord;
+	aiVector3D** texCoord;
 	aiFace* face;
 	aiVertexWeight** weight;
 
 	unsigned int vertexOffset = 0, triangleOffset = 0, boneOffset = 0;
 
 	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
-		vertex      = mesh[i]->mVertices;
-		normal      = mesh[i]->mNormals;
-		//texCoord  = mesh[i]->mTextureCoords;
-		face        = mesh[i]->mFaces;
+		vertex		= mesh[i]->mVertices;
+		normal		= mesh[i]->mNormals;
+		texCoord	= mesh[i]->mTextureCoords;
+		face		= mesh[i]->mFaces;
 		bone        = mesh[i]->mBones;
 
 		// Get vertex positions
@@ -113,7 +113,7 @@ Body::Body(const char * meshfile, const char * animfile)
 
 		vertexOffset   += mesh[i]->mNumVertices;
 		triangleOffset += mesh[i]->mNumFaces;
-		boneOffset += mesh[i]->mNumBones;
+		boneOffset     += mesh[i]->mNumBones;
 	}
 	
 

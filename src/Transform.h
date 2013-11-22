@@ -7,16 +7,17 @@ class Transform
 {
 public:
 	Transform();
+	Transform(const glm::mat4 &matrix);
 
-	void setTranslation(const glm::vec3 &translation);
-	void setOrientation(const glm::quat &orientation);
-	void setScale(const glm::vec3 &scale);
+	void setTranslation(const glm::vec3 &translation) { m_translation = translation; }
+	void setOrientation(const glm::quat &orientation) { m_orientation = orientation; }
+	void setScale(const glm::vec3 &scale) { m_scale = scale; }
 
 	void setMat4(const glm::mat4 &matrix);
 
-	const glm::vec3 & getTranslation();
-	const glm::quat & getOrientation();
-	const glm::vec3 & getScale();
+	const glm::vec3 & getTranslation() { return m_translation; }
+	const glm::quat & getOrientation() { return m_orientation; }
+	const glm::vec3 & getScale() { return m_scale; }
 
 	glm::mat4 getMat4();
 	glm::mat4 getInvMat4();
