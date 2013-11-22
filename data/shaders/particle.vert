@@ -60,12 +60,12 @@ uniform float	randomForce		= 0;
 uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 
-uniform float damping = .15;
+uniform float damping = .06;
 
 void main(void)
 {
 	// Perform skinning to get target position of vertex
-	vec3 targetPosition = in_vertexPosition * 1.0;
+	vec3 targetPosition = (modelMatrix * vec4(in_vertexPosition,1)).xyz * 1.0;
 
 	// Perhaps implement a static max distance from position to targetposition
 	// if the position is beyond this limit, move the position to the edge of this limit.
@@ -74,7 +74,7 @@ void main(void)
 	vec3 old = in_oldPosition;
 
 	//vec3 diff = length(targetPosition - pos);
-	vec3 attrForce = (targetPosition - pos) * 20.00;
+	vec3 attrForce = (targetPosition - pos) * 4.1;
 
 	float rf = randomForce * random( pos );
 	vec3 force = externalForce + attrForce + rf * in_vertexNormal;

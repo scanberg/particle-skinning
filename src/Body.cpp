@@ -74,7 +74,7 @@ Body::Body(const char * meshfile, const char * animfile)
 	//aiBone** bone;
 	aiVector3D* vertex;
 	aiVector3D* normal;
-	//aiVector3D** texCoord;
+	aiVector3D** texCoord;
 	aiFace* face;
 	aiVertexWeight** weight;
 
@@ -83,7 +83,7 @@ Body::Body(const char * meshfile, const char * animfile)
 	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
 		vertex		= mesh[i]->mVertices;
 		normal		= mesh[i]->mNormals;
-		//texCoord	= mesh[i]->mTextureCoords;
+		texCoord	= mesh[i]->mTextureCoords;
 		face		= mesh[i]->mFaces;
 		//bone = mesh[i]->mBones;
 

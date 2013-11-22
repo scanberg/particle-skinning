@@ -84,6 +84,7 @@ void ParticleSkinnedModel::draw()
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
     //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
 
+    glPointSize(2);
     glDrawArrays(GL_POINTS, 0, m_ps.getParticleCount());
     glBindVertexArray(0);
 }
