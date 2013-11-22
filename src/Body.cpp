@@ -68,24 +68,25 @@ Body::Body(const char * meshfile, const char * animfile)
 	m_triangleData  = new sTriangle[m_triangleCount];
 	m_boneData      = new Transform[m_boneCount];
 	//m_animationData = new Animation[m_animationCount];
+	m_boneSH        = new StringHash[m_boneCount];
 
 	// Read mesh data
 	aiMesh** mesh = scene->mMeshes;
-	//aiBone** bone;
+	aiBone** bone;
 	aiVector3D* vertex;
 	aiVector3D* normal;
 	//aiVector3D** texCoord;
 	aiFace* face;
 	aiVertexWeight** weight;
 
-	unsigned int vertexOffset = 0, triangleOffset = 0;
+	unsigned int vertexOffset = 0, triangleOffset = 0, boneOffset = 0;
 
 	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
-		vertex		= mesh[i]->mVertices;
-		normal		= mesh[i]->mNormals;
-		//texCoord	= mesh[i]->mTextureCoords;
-		face		= mesh[i]->mFaces;
-		//bone = mesh[i]->mBones;
+		vertex      = mesh[i]->mVertices;
+		normal      = mesh[i]->mNormals;
+		//texCoord  = mesh[i]->mTextureCoords;
+		face        = mesh[i]->mFaces;
+		bone        = mesh[i]->mBones;
 
 		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
@@ -104,9 +105,15 @@ Body::Body(const char * meshfile, const char * animfile)
 				fprintf(stderr, "Faces with != 3 indices not implemented\n");
 			}
 		}
+		// Get bones
+		for(unsigned int j=0; j<mesh[i]->mNumBones; ++j) {
+			m_boneSH[boneOffset+j] = StringHash(bone[j].mName.C_Str());
+			//m_boneData[boneOffset+j].
+		}
 
 		vertexOffset   += mesh[i]->mNumVertices;
 		triangleOffset += mesh[i]->mNumFaces;
+		boneOffset += mesh[i]->mNumBones;
 	}
 	
 
