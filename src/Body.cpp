@@ -130,15 +130,14 @@ Body::Body(const char * meshfile, const char * animfile)
 		boneOffset     += mesh[i]->mNumBones;
 	}
 	
-
 	// If we have a separate animation file
-	if(animfile != NULL) {
-		scene = aiImportFile(animfile,
-		aiProcess_CalcTangentSpace       | 
-		aiProcess_Triangulate            |
-		aiProcess_JoinIdenticalVertices  |
-		aiProcess_SortByPType);
+	m_animationCount = scene->mNumAnimations;
+	m_animationData  = new Animation[m_animationCount];
+	m_animationSH    = (StringHash*) malloc(sizeof(StringHash)*m_animationCount);
 
+	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
+		//printf("%s\n", scene->mAnimations[i]->mName.C_Str());
+		m_animationSH[i] = StringHash(scene->mAnimations[i]->mName.C_Str());
 	}
 
 	aiReleaseImport(scene);
