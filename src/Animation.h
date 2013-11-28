@@ -22,25 +22,24 @@ class AnimationChannel
 class Animation
 {
 public:
-	Animation(unsigned int channelCount, unsigned int frameCount) :
-	m_channelCount(channelCount),
-	m_frameCount(frameCount)
+	Animation(unsigned int channelCount) :
+	m_channelCount(channelCount)
 	{
 		m_channel = (AnimationChannel*) malloc(sizeof(AnimationChannel) * m_channelCount);
-		for(unsigned int i=0; i<m_channelCount; ++i)
-			m_channel[i] = AnimationChannel(m_frameCount);
 	}
 
 	~Animation()
 	{
-		free(m_channel);
+		if(m_channel)
+			free(m_channel);
 	}
 
-	AnimationChannel * 	getChannel(unsigned int i) { return m_channel+i; }
+	void setChannel(size_t i, const AnimationChannel & ac) { assert(i < m_channelCount); m_channel[i] = ac; }
+	AnimationChannel * 	getChannel(size_t i) { return m_channel+i; }
 private:
 	AnimationChannel *	m_channel;
 	unsigned int		m_channelCount;
 
-	unsigned int 		m_framesPerSecond;
-	unsigned int		m_frameCount;
+	float 				m_duration;
+	float 				m_framesPerSecond;
 };

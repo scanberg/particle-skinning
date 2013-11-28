@@ -31,7 +31,7 @@ void Transform::setMat4(const glm::mat4 &matrix)
 	setTranslation(translation);
 }
 
-glm::mat4 Transform::getMat4()
+glm::mat4 Transform::getMat4() const
 {
 	glm::mat4 T = glm::translate(glm::mat4(), m_translation);
 	glm::mat4 R = glm::mat4_cast(m_orientation);
@@ -40,11 +40,25 @@ glm::mat4 Transform::getMat4()
 	return T * R * S;
 }
 
-glm::mat4 Transform::getInvMat4()
+glm::mat4 Transform::getInvMat4() const
 {
 	glm::mat4 T = glm::translate(glm::mat4(), -m_translation);
 	glm::mat4 R = glm::mat4_cast(glm::conjugate(m_orientation));
 	glm::mat4 S = glm::scale(glm::mat4(), 1.0f/m_scale);
 
 	return S * R * T;
+}
+
+Transform Transform::interpolate(const Transform & t0, const Transform & t1, float k)
+{
+	Transform t;
+	k = glm::clamp(k, 0.0f, 1.0f);
+	float k0 = 1.0f-k;
+	float k1 = k;
+
+	t.setTranslation(t0.getTranslation() * k0 + t1.getTranslation() * k1);
+	t.setOrientation(glm::slerp(t0.getOrientation(), t1.getOrientation(), k));
+	t.setScale(t0.getScale() * k0 + t1.getScale() * k1);
+
+	return t;
 }

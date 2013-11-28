@@ -15,12 +15,14 @@ public:
 
 	void setMat4(const glm::mat4 &matrix);
 
-	const glm::vec3 & getTranslation() { return m_translation; }
-	const glm::quat & getOrientation() { return m_orientation; }
-	const glm::vec3 & getScale() { return m_scale; }
+	const glm::vec3 & getTranslation() const { return m_translation; }
+	const glm::quat & getOrientation() const { return m_orientation; }
+	const glm::vec3 & getScale() const { return m_scale; }
 
-	glm::mat4 getMat4();
-	glm::mat4 getInvMat4();
+	glm::mat4 getMat4() const;
+	glm::mat4 getInvMat4() const;
+
+	static Transform interpolate(const Transform & t0, const Transform & t1, float k);
 
 private:
 	glm::vec3 m_translation;
