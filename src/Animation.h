@@ -1,44 +1,39 @@
 #pragma once
 
+#include <vector>
 #include "Transform.h"
 
 class AnimationChannel
 {
 	public:
-	AnimationChannel(unsigned int frameCount)
-	{
-		m_frameCount = frameCount;
-		m_pose = new Transform[frameCount];
-	}
-	~AnimationChannel()
-	{
-		delete[] m_pose;
-	}
+	AnimationChannel(size_t keyCount=0) :
+	m_pose(keyCount)
+	{}
 
-	Transform * 	m_pose;
-	unsigned int 	m_frameCount;
+	~AnimationChannel()
+	{}
+
+	const size_t & getKeyCount() { return m_pose.size(); }
+
+	std::vector<Transform> m_pose;
 };
 
 class Animation
 {
 public:
-	Animation(unsigned int channelCount) :
-	m_channelCount(channelCount)
-	{
-		m_channel = (AnimationChannel*) malloc(sizeof(AnimationChannel) * m_channelCount);
-	}
+	Animation(size_t channelCount = 0) :
+	m_channel(channelCount)
+	{}
 
 	~Animation()
-	{
-		if(m_channel)
-			free(m_channel);
-	}
+	{}
 
-	void setChannel(size_t i, const AnimationChannel & ac) { assert(i < m_channelCount); m_channel[i] = ac; }
-	AnimationChannel * 	getChannel(size_t i) { return m_channel+i; }
+	void addChannel(const AnimationChannel & ac) { m_channel.push_back(ac); }
+	const AnimationChannel & getChannel(size_t i) { return m_channel[i]; }
+
+	Transform getPoseAtTime(size_t channel, float t);
 private:
-	AnimationChannel *	m_channel;
-	unsigned int		m_channelCount;
+	std::vector<AnimationChannel>	m_channel;
 
 	float 				m_duration;
 	float 				m_framesPerSecond;

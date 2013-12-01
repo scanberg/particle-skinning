@@ -7,6 +7,7 @@ class Transform
 {
 public:
 	Transform();
+	Transform(const glm::vec3 &t, const glm::quat &o, const glm::vec3 &s);
 	Transform(const glm::mat4 &matrix);
 
 	void setTranslation(const glm::vec3 &translation) { m_translation = translation; }

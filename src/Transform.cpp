@@ -8,6 +8,14 @@ m_scale(glm::vec3(1))
 
 }
 
+Transform::Transform(const glm::vec3 &t, const glm::quat &o, const glm::vec3 &s) :
+m_translation(t),
+m_orientation(o),
+m_scale(s)
+{
+
+}
+
 Transform::Transform(const glm::mat4 &matrix) :
 m_scale(glm::vec3(1))
 {

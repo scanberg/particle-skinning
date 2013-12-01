@@ -6,7 +6,7 @@
 #include <assimp/postprocess.h>    // Post processing flags
 #include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
 
-Body::Body(const char * meshfile, const char * animfile)
+Body::Body(const char * meshfile)
 {
 	m_vertexData 		= NULL;
 	m_vertexCount 		= 0;
@@ -22,8 +22,6 @@ Body::Body(const char * meshfile, const char * animfile)
 	m_boneData			= NULL;
 	m_boneCount 		= 0;
 
-	m_animationSH 		= NULL;
-	m_animationData 	= NULL;
 	m_animationCount 	= 0;
 
 	m_vb = 0;
@@ -131,28 +129,100 @@ Body::Body(const char * meshfile, const char * animfile)
 	}
 	
 	// If we have a separate animation file
-	m_animationCount = scene->mNumAnimations;
-	m_animationData  = (Animation*) malloc(sizeof(Animation)*m_animationCount);
-	m_animationSH    = (StringHash*) malloc(sizeof(StringHash)*m_animationCount);
-
-	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
-		//printf("%s\n", scene->mAnimations[i]->mName.C_Str());
-		m_animationSH[i] = StringHash(scene->mAnimations[i]->mName.C_Str());
-		m_animationData[i] = Animation(scene->mAnimations[i]->mNumChannels,(unsigned int)scene->mAnimations[i]->mTicksPerSecond);
-		for(unsigned int j=0; j<scene->mAnimations[i]->mNumChannels; ++j) {
-			printf("%d %d %d\n", scene->mAnimations[i]->mChannels[j]->mNumPositionKeys, scene->mAnimations[i]->mChannels[j]->mNumRotationKeys, scene->mAnimations[i]->mChannels[j]->mNumScalingKeys);
-			//for(unsigned int k=0; k<scene->mAnimations[i]->mChannels[j]->; ++j) {
-			//glm::vec3 poskey = glm::
-			//m_animationData[i].getChannel(j)->m_pose.setTranslation( scene->mAnimations[i]->mChannels[j].mPositionKeys );
-			//m_animationData[i].m_pose.setOrientation( scene->mAnimations[i]->mChannels[j].mRotationKeys );
-			//m_animationData[i].m_pose.setScale(       scene->mAnimations[i]->mChannels[j].mScalingKeys );
-		}
-
-	}
+	addAnimation(meshfile, "default");
 
 	aiReleaseImport(scene);
 
 	fillBuffers();
+}
+
+void Body::addAnimation(const char* animationfile, const char* name)
+{
+	const aiScene* scene = aiImportFile(animationfile, 0);
+
+	// Exit if we have no animations in the file
+	if (scene->mNumAnimations == 0)
+		return;
+
+	m_animationCount += scene->mNumAnimations;
+
+	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
+		printf("Name of animation: \"%s\"\n", name);
+		m_animationSH.push_back(StringHash(name));
+		m_animationData.push_back(Animation(scene->mAnimations[i]->mNumChannels));
+
+		Animation * anim = &m_animationData[i];
+
+		printf("%s\n", m_animationSH[i].getStr());
+		for(unsigned int j=0; j<scene->mAnimations[i]->mNumChannels; ++j) {
+
+			aiNodeAnim * channel = scene->mAnimations[i]->mChannels[j];
+			unsigned int posKeys = channel->mNumPositionKeys;
+			unsigned int rotKeys = channel->mNumRotationKeys;
+			unsigned int sclKeys = channel->mNumScalingKeys;
+			unsigned int maxKeys = glm::max(posKeys, glm::max(rotKeys, sclKeys));
+
+			AnimationChannel ch(maxKeys);
+
+			printf("%d %d %d\n", posKeys, rotKeys, sclKeys);
+
+			bool iplPos = posKeys < maxKeys;
+			bool iplRot = rotKeys < maxKeys;
+			bool iplScl = sclKeys < maxKeys;
+
+			for(unsigned int k=0; k<maxKeys; ++k)
+			{
+				float w = (float)k / (float)maxKeys;
+				int lowerFrame, upperFrame;
+				glm::vec3 pos;
+				glm::quat rot;
+				glm::vec3 scl;
+
+				if(iplPos) {
+					lowerFrame = (int) (w * posKeys);
+					upperFrame = lowerFrame + 1;
+					glm::vec3 lowerPos = glm::make_vec3(&channel->mPositionKeys[lowerFrame].mValue.x);
+					glm::vec3 upperPos = glm::make_vec3(&channel->mPositionKeys[upperFrame].mValue.x);
+					pos = glm::mix(lowerPos, upperPos, w);
+				} else {
+					pos = glm::make_vec3(&channel->mPositionKeys[k].mValue.x);
+				}
+
+				if(iplRot) {
+					lowerFrame = (int) (w * rotKeys);
+					upperFrame = lowerFrame + 1;
+					glm::quat lowerRot = glm::make_quat(&channel->mRotationKeys[lowerFrame].mValue.x);
+					glm::quat upperRot = glm::make_quat(&channel->mRotationKeys[upperFrame].mValue.x);
+					rot = glm::slerp(lowerRot, upperRot, w);
+				} else {
+					rot = glm::make_quat(&channel->mRotationKeys[k].mValue.x);
+				}
+
+				if(iplScl) {
+					if(sclKeys == 1) {
+						scl = glm::make_vec3(&channel->mScalingKeys[0].mValue.x);
+					}
+					else
+					{
+						lowerFrame = (int) (w * sclKeys);
+						upperFrame = lowerFrame + 1;
+						glm::vec3 lowerScl = glm::make_vec3(&channel->mScalingKeys[lowerFrame].mValue.x);
+						glm::vec3 upperScl = glm::make_vec3(&channel->mScalingKeys[upperFrame].mValue.x);
+						scl = glm::mix(lowerScl, upperScl, w);
+					}
+				} else {
+					scl = glm::make_vec3(&channel->mScalingKeys[k].mValue.x);
+				}
+
+				ch.m_pose[k] = Transform(pos, rot, scl);
+
+				//printf("P: %.2f %.2f %.2f, R: %.2f %.2f %.2f %.2f, S: %.2f %.2f %.2f\n",
+				//	pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, rot.w, scl.x, scl.y, scl.z);
+
+			}
+			anim->addChannel(ch);
+		}
+	}
 }
 
 Body::~Body()
@@ -174,12 +244,6 @@ Body::~Body()
 
 	if(m_boneSH)
 		delete[] m_boneSH;
-
-	if(m_animationData)
-		delete[] m_animationData;
-
-	if(m_animationSH)
-		delete[] m_animationSH;
 
 	glDeleteBuffers(1, &m_vb);
 	glDeleteBuffers(1, &m_ib);

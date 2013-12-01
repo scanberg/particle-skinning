@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vector>
 #include "Animation.h"
 #include "StringHash.h"
 
@@ -34,7 +35,7 @@ public:
 		unsigned int count;
 	}sPart;
 
-	Body(const char * meshfile, const char * animfile = NULL);
+	Body(const char * meshfile);
 	~Body();
 
 	sVertex *		getVertexData() { return m_vertexData; }
@@ -55,6 +56,7 @@ public:
 	unsigned int 	getVertexBuffer() { return m_vb; }
 	unsigned int	getIndexBuffer() { return m_ib; }
 
+	void 			addAnimation(const char * animationfile, const char * name);
 	void			draw();
 	void 			drawPart(unsigned int index);
 	
@@ -84,7 +86,7 @@ private:
 	unsigned int 	m_boneCount;
 
 	// Animation data
-	StringHash * 	m_animationSH;
-	Animation *		m_animationData;
+	std::vector<StringHash> 	m_animationSH;
+	std::vector<Animation>		m_animationData;
 	unsigned int	m_animationCount;
 };

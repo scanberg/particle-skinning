@@ -47,7 +47,8 @@ int main()
 
     particleShader.link();
 
-    Body bobMesh( "data/bob/bob.md5mesh", "data/bob/bob.md5anim" );
+    Body bobMesh("data/hellknight/hellknight.md5mesh");
+    bobMesh.addAnimation("data/hellknight/idle2.md5anim", "idle");
 
     ParticleSkinnedModel bob( &particleShader, &bobMesh );
 
@@ -56,7 +57,7 @@ int main()
     camera.setPosition(glm::vec3(0,0,5));
 
     bob.rotate(glm::vec3(-90,0,0));
-    bob.setScale(glm::vec3(0.1));
+    bob.setScale(glm::vec3(0.05));
     bob.setPosition(glm::vec3(0,-3,0));
 
     // queries for accurate profiling of opengl calls.
