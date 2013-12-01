@@ -13,7 +13,7 @@ class AnimationChannel
 	~AnimationChannel()
 	{}
 
-	const size_t & getKeyCount() { return m_pose.size(); }
+	size_t getKeyCount() { return m_pose.size(); }
 
 	std::vector<Transform> m_pose;
 };

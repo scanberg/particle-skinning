@@ -27,10 +27,10 @@ GPUParticleSystem::GPUParticleSystem(Body * body, Shader * shader)
 	assert(body);
 	assert(shader);
 
-    unsigned int    particleCount = body->getVertexCount();
-    sParticle *     particleData = new sParticle[particleCount];
+    size_t		particleCount = body->getVertexCount();
+    sParticle * particleData = new sParticle[particleCount];
 
-    for(unsigned int i=0; i<particleCount; ++i)
+    for(size_t i=0; i<particleCount; ++i)
     {
         const Body::sVertex v = body->getVertexData()[i];
         sParticle& p = particleData[i];

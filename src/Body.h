@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <assimp/scene.h>
 #include "Animation.h"
 #include "StringHash.h"
 
@@ -26,31 +27,42 @@ public:
 
 	struct sTriangle
 	{
+		sTriangle() : index() {}
 		unsigned int index[3];
 	};
 
-	typedef struct
+	struct sPart
 	{
+		sPart() : offset(0), count(0) {};
+		sPart(int o, int c) : offset(o), count(c) {}
 		unsigned int offset;
 		unsigned int count;
-	}sPart;
+	};
 
 	Body(const char * meshfile);
 	~Body();
 
-	sVertex *		getVertexData() { return m_vertexData; }
-	unsigned int 	getVertexCount() { return m_vertexCount; }
+	sVertex *		getVertexData() { return &m_vertexData[0]; }
+	size_t 			getVertexCount() { return m_vertexData.size(); }
 
-	sTriangle * 	getTriangleData() { return m_triangleData; }
-	unsigned int	getTriangleCount() { return m_triangleCount; }
+	sTriangle * 	getTriangleData() { return &m_triangleData[0]; }
+	size_t			getTriangleCount() { return m_triangleData.size(); }
 
-	unsigned int 	getPartCount() { return m_partCount; }
-	unsigned int 	getBoneCount() { return m_boneCount; }
-	unsigned int 	getAnimationCount() { return m_animationCount; }
+	size_t 			getPartCount() { return m_partData.size(); }
+	size_t 			getBoneCount() { return m_boneData.size(); }
+	size_t		 	getAnimationCount() { return m_animationData.size(); }
 
 	sPart * 		getPart(const StringHash & sh);
+	sPart *			getPart(size_t index);
+	int				getPartIndex(const StringHash & sh);
+
 	Transform * 	getBone(const StringHash & sh);
+	Transform *		getBone(size_t index);
+	int				getBoneIndex(const StringHash & sh);
+
 	Animation * 	getAnimation(const StringHash & sh);
+	Animation *		getAnimation(size_t index);
+	int				getAnimationIndex(const StringHash & sh);
 
 	unsigned int 	getVertexArray() { return m_va; }
 	unsigned int 	getVertexBuffer() { return m_vb; }
@@ -61,6 +73,7 @@ public:
 	void 			drawPart(unsigned int index);
 	
 private:
+	void readBoneHierarchy(aiNode * node, int parent);
 	void fillBuffers();
 
 	// GL buffers
@@ -69,24 +82,19 @@ private:
 	unsigned int 	m_ib;
 
 	// Geometric data
-	sVertex * 		m_vertexData;
-	unsigned int 	m_vertexCount;
-
-	sTriangle * 	m_triangleData;
-	unsigned int 	m_triangleCount;
+	std::vector<sVertex> 	m_vertexData;
+	std::vector<sTriangle>	m_triangleData;
 
 	// Groups defining parts of the mesh
-	StringHash * 	m_partSH;
-	sPart *			m_partData;
-	unsigned int 	m_partCount;
+	std::vector<StringHash>	m_partSH;
+	std::vector<sPart>		m_partData;
 
 	// Bone transformations
-	StringHash *	m_boneSH;
-	Transform * 	m_boneData;
-	unsigned int 	m_boneCount;
+	std::vector<StringHash>	m_boneSH;
+	std::vector<Transform> 	m_boneData;
+	std::vector<int>		m_boneParent;
 
 	// Animation data
-	std::vector<StringHash> 	m_animationSH;
-	std::vector<Animation>		m_animationData;
-	unsigned int	m_animationCount;
+	std::vector<StringHash> m_animationSH;
+	std::vector<Animation>	m_animationData;
 };

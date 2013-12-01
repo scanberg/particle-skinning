@@ -47,8 +47,8 @@ int main()
 
     particleShader.link();
 
-    Body bobMesh("data/hellknight/hellknight.md5mesh");
-    bobMesh.addAnimation("data/hellknight/idle2.md5anim", "idle");
+    Body bobMesh("data/pinky/pinky.md5mesh");
+    bobMesh.addAnimation("data/pinky/idle1.md5anim", "idle");
 
     ParticleSkinnedModel bob( &particleShader, &bobMesh );
 
@@ -76,7 +76,7 @@ int main()
         t += dt;
 
 		//if (glfwGetKey(g_window, GLFW_KEY_SPACE))
-            bob.rotate(glm::vec3(0,0,3*glm::cos(2.0*t)*dt));
+            //bob.rotate(glm::vec3(0,0,3*glm::cos(2.0*t)*dt));
 
 		//bob.addRandomImpulse(5.0f);
 

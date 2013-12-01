@@ -6,24 +6,33 @@
 #include <assimp/postprocess.h>    // Post processing flags
 #include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
 
+int findStringHashInVector(const StringHash & sh, const std::vector<StringHash> & v)
+{
+	for (int i = 0; i < (int)v.size(); ++i)
+	{
+		if (v[i] == sh)
+			return i;
+	}
+
+	// not found
+	return -1;
+}
+
+void printNode(aiNode* node, size_t level)
+{
+	if (!node)
+		return;
+
+	for (size_t i = 0; i < level; ++i)
+		printf("  ");
+	printf("%s\n", node->mName.C_Str());
+
+	for (size_t i = 0; i < node->mNumChildren; ++i)
+		printNode(node->mChildren[i], level+1);
+}
+
 Body::Body(const char * meshfile)
 {
-	m_vertexData 		= NULL;
-	m_vertexCount 		= 0;
-
-	m_triangleData		= NULL;
-	m_triangleCount 	= 0;
-
-	m_partSH			= NULL;
-	m_partData 			= NULL;
-	m_partCount 		= 0;
-
-	m_boneSH 			= NULL;
-	m_boneData			= NULL;
-	m_boneCount 		= 0;
-
-	m_animationCount 	= 0;
-
 	m_vb = 0;
 	m_ib = 0;
 	m_va = 0;
@@ -50,24 +59,26 @@ Body::Body(const char * meshfile)
 	}
 	
 	// Get array allocation data
-	m_partCount = scene->mNumMeshes;
-	m_partData  = new sPart[m_partCount];
+	int partCount = scene->mNumMeshes;
+	int vertexCount = 0;
+	int triangleCount = 0;
+	int boneCount = 0;
 
-	for(unsigned int i=0; i<scene->mNumMeshes; ++i) {
-		m_partData[i].offset = m_vertexCount;
+	for (unsigned int i = 0; i<partCount; ++i) {
+		m_partData.push_back(sPart());
+		m_partData[i].offset = vertexCount;
 		m_partData[i].count  = scene->mMeshes[i]->mNumVertices;
 
-		m_vertexCount    += scene->mMeshes[i]->mNumVertices;
-		m_triangleCount  += scene->mMeshes[i]->mNumFaces; //maybe
-		m_boneCount	     += scene->mMeshes[i]->mNumBones;
-		m_animationCount += scene->mNumAnimations;
+		vertexCount    += scene->mMeshes[i]->mNumVertices;
+		triangleCount  += scene->mMeshes[i]->mNumFaces; //maybe
+		boneCount	   += scene->mMeshes[i]->mNumBones;
 	}
 
-	m_vertexData    = new sVertex[m_vertexCount];
-	m_triangleData  = new sTriangle[m_triangleCount];
-	m_boneData      = new Transform[m_boneCount];
-	//m_animationData = new Animation[m_animationCount];
-	m_boneSH        = (StringHash*) malloc(sizeof(StringHash)*m_boneCount);
+	m_vertexData.reserve(vertexCount);
+	m_triangleData.reserve(triangleCount);
+	m_boneData.reserve(boneCount);
+	m_boneSH.reserve(boneCount);
+	m_boneParent.reserve(boneCount);
 
 	// Read mesh data
 	aiMesh** mesh = scene->mMeshes;
@@ -89,6 +100,7 @@ Body::Body(const char * meshfile)
 
 		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
+			m_vertexData.push_back(sVertex());
 			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j][0],	vertex[j][1],	vertex[j][2]);
 			m_vertexData[vertexOffset + j].normal	= glm::vec3(normal[j][0],	normal[j][1],	normal[j][2]);
 			//m_vertexData[vertexOffset + j].texCoord = glm::vec2(texCoord[j][0][0], texCoord[j][0][1]);
@@ -97,6 +109,7 @@ Body::Body(const char * meshfile)
 		// Get triangle indices
 		for(unsigned int j=0; j<mesh[i]->mNumFaces; ++j) {
 			if(face[j].mNumIndices == 3) {
+				m_triangleData.push_back(sTriangle());
 				m_triangleData[triangleOffset+j].index[0] = vertexOffset + face[j].mIndices[0];
 				m_triangleData[triangleOffset+j].index[1] = vertexOffset + face[j].mIndices[1];
 				m_triangleData[triangleOffset+j].index[2] = vertexOffset + face[j].mIndices[2];
@@ -104,10 +117,18 @@ Body::Body(const char * meshfile)
 				fprintf(stderr, "Faces with != 3 indices not implemented\n");
 			}
 		}
-		// Get bones
+		// Get bones with weights
 		for(unsigned int j=0; j<mesh[i]->mNumBones; ++j) {
-			m_boneSH[boneOffset+j]   = StringHash(bone[j]->mName.C_Str());
-			m_boneData[boneOffset+j] = Transform(glm::make_mat4( (float*)(bone[j]->mOffsetMatrix[0])) );
+			printf("New bone: %s \n", bone[j]->mName.C_Str());
+			StringHash sh(bone[j]->mName.C_Str());
+			int index = findStringHashInVector(sh, m_boneSH);
+			if (index > 0)
+			{
+				// do what? exists allready!
+			}
+			m_boneSH.push_back(StringHash(bone[j]->mName.C_Str()));
+			m_boneData.push_back(Transform(glm::make_mat4( (float*)(bone[j]->mOffsetMatrix[0])) ));
+			m_boneParent.push_back(-1);
 
 			for(unsigned int k=0; k<bone[j]->mNumWeights; ++k) {
 				const aiVertexWeight& vw = bone[j]->mWeights[k];
@@ -127,8 +148,19 @@ Body::Body(const char * meshfile)
 		triangleOffset += mesh[i]->mNumFaces;
 		boneOffset     += mesh[i]->mNumBones;
 	}
+
+	printf("Hierarchy: \n");
+	printNode(scene->mRootNode, 0);
+
+	readBoneHierarchy(scene->mRootNode, -1);
+
+	// print the local version of the hierarchy
+	for (size_t i = 0; i < getBoneCount(); ++i)
+	{
+		printf("[%i]%s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
+	}
 	
-	// If we have a separate animation file
+	// If we have an animation named as the meshfile.md5anim
 	addAnimation(meshfile, "default");
 
 	aiReleaseImport(scene);
@@ -136,22 +168,99 @@ Body::Body(const char * meshfile)
 	fillBuffers();
 }
 
+Body::~Body()
+{
+	glDeleteBuffers(1, &m_vb);
+	glDeleteBuffers(1, &m_ib);
+	glDeleteVertexArrays(1, &m_va);
+}
+
+Body::sPart * Body::getPart(const StringHash & sh)
+{
+	for (int i = 0; i < getPartCount(); ++i)
+	{
+		if (m_partSH[i] == sh)
+			return &m_partData[i];
+	}
+
+	return nullptr;
+}
+
+Body::sPart * Body::getPart(size_t index)
+{
+	if (-1 < index && index < getPartCount())
+		return &m_partData[index];
+
+	return nullptr;
+}
+
+int	Body::getPartIndex(const StringHash & sh)
+{
+	return findStringHashInVector(sh, m_partSH);
+}
+
+Transform * Body::getBone(const StringHash & sh)
+{
+	for (int i = 0; i < getBoneCount(); ++i)
+	{
+		if (m_boneSH[i] == sh)
+			return &m_boneData[i];
+	}
+
+	return nullptr;
+}
+
+Transform * Body::getBone(size_t index)
+{
+	if (-1 < index && index < getBoneCount())
+		return &m_boneData[index];
+
+	return nullptr;
+}
+
+int Body::getBoneIndex(const StringHash & sh)
+{
+	return findStringHashInVector(sh, m_boneSH);
+}
+
+Animation * Body::getAnimation(const StringHash & sh)
+{
+	for (int i = 0; i < getAnimationCount(); ++i)
+	{
+		if (m_animationSH[i] == sh)
+			return &m_animationData[i];
+	}
+	
+	return nullptr;
+}
+
+Animation * Body::getAnimation(size_t index)
+{
+	if (-1 < index && index < getAnimationCount())
+		return &m_animationData[index];
+
+	return nullptr;
+}
+
+int Body::getAnimationIndex(const StringHash & sh)
+{
+	return findStringHashInVector(sh, m_boneSH);
+}
+
 void Body::addAnimation(const char* animationfile, const char* name)
 {
 	const aiScene* scene = aiImportFile(animationfile, 0);
 
 	// Exit if we have no animations in the file
-	if (scene->mNumAnimations == 0)
+	if (!scene || scene->mNumAnimations == 0)
 		return;
-
-	m_animationCount += scene->mNumAnimations;
 
 	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
 		printf("Name of animation: \"%s\"\n", name);
 		m_animationSH.push_back(StringHash(name));
 		m_animationData.push_back(Animation(scene->mAnimations[i]->mNumChannels));
 
-		Animation * anim = &m_animationData[i];
+		Animation & anim = m_animationData[i];
 
 		printf("%s\n", m_animationSH[i].getStr());
 		for(unsigned int j=0; j<scene->mAnimations[i]->mNumChannels; ++j) {
@@ -220,34 +329,23 @@ void Body::addAnimation(const char* animationfile, const char* name)
 				//	pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, rot.w, scl.x, scl.y, scl.z);
 
 			}
-			anim->addChannel(ch);
+			anim.addChannel(ch);
 		}
 	}
 }
 
-Body::~Body()
+void Body::readBoneHierarchy(aiNode* node, int parent)
 {
-	if(m_vertexData)
-		delete[] m_vertexData;
+	if (!node)
+		return;
 
-	if(m_triangleData)
-		delete[] m_triangleData;
+	StringHash sh(node->mName.C_Str());
+	int index = getBoneIndex(sh);
+	if (-1 < index)
+		m_boneParent[index] = parent;
 
-	if(m_partData)
-		delete[] m_partData;
-
-	if(m_partSH)
-		delete[] m_partSH;
-
-	if(m_boneData)
-		delete[] m_boneData;
-
-	if(m_boneSH)
-		delete[] m_boneSH;
-
-	glDeleteBuffers(1, &m_vb);
-	glDeleteBuffers(1, &m_ib);
-	glDeleteVertexArrays(1, &m_va);
+	for (size_t i = 0; i < node->mNumChildren; ++i)
+		readBoneHierarchy(node->mChildren[i], index);
 }
 
 void Body::fillBuffers()
@@ -255,20 +353,16 @@ void Body::fillBuffers()
     glBindVertexArray(m_va);
     
 	glBindBuffer(GL_ARRAY_BUFFER, m_vb);
-	glBufferData(GL_ARRAY_BUFFER, m_vertexCount * sizeof(sVertex), m_vertexData, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, getVertexCount() * sizeof(sVertex), getVertexData(), GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_triangleCount * sizeof(sTriangle), m_triangleData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, getTriangleCount() * sizeof(sTriangle), getTriangleData(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
 
 	glBindVertexArray(0);
 }
-
-Body::sPart * Body::getPart(const StringHash & sh){ return NULL; }
-Transform * Body::getBone(const StringHash & sh){return NULL;}
-Animation * Body::getAnimation(const StringHash & sh){return NULL;}
 
 void Body::draw()
 {

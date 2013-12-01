@@ -17,8 +17,8 @@ public:
 	virtual ~Model();
 
 	// Animation functionality
-	void setAnimation(const char * animation);
-	void setAnimation(unsigned int index);
+	void setAnimation(const char * animationName);
+	void setAnimation(size_t index);
 
 	void play(float speed = 1.0f, int iterations = 1);
 
@@ -36,8 +36,16 @@ public:
 	unsigned int 		getMaterialCount() { return m_materialCount; }
 
 protected:
+	// Visuals
 	Body *			m_body;
 
 	Material **		m_material;
 	unsigned int 	m_materialCount;
+
+	// Animation
+	float			m_animTime;
+	float			m_animSpeed;
+	int				m_loopCount;
+	Animation*		m_currentAnim;
+
 };

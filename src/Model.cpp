@@ -3,9 +3,12 @@
 #include "Model.h"
 
 
-Model::Model(Body * body, Material ** material, unsigned int materialCount)
+Model::Model(Body * body, Material ** material, unsigned int materialCount) :
+m_body(body),
+m_animTime(0.0f),
+m_currentAnim(NULL)
 {
-	m_body = body;
+	assert(body);
 }
 
 Model::~Model()
@@ -16,12 +19,19 @@ Model::~Model()
 // Animation functionality
 void Model::setAnimation(const char * animation)
 {
+	StringHash sh(animation);
+	Animation * anim = m_body->getAnimation(sh);
 
+	if (anim)
+		m_currentAnim = anim;
 }
 
-void Model::setAnimation(unsigned int index)
+void Model::setAnimation(size_t index)
 {
+	Animation * anim = m_body->getAnimation(index);
 
+	if (anim)
+		m_currentAnim = anim;
 }
 
 void Model::play(float speed, int iterations)
