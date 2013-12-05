@@ -20,7 +20,7 @@ public:
 	void setAnimation(const char * animationName);
 	void setAnimation(size_t index);
 
-	void play(float speed = 1.0f, int iterations = 1);
+	void play(float speed = 1.0f, int iterations = 0);
 
 	void pause();
 	void stop();
@@ -31,21 +31,23 @@ public:
 
 	void draw();
 
-	Body * 				getBody() { return m_body; }
-	Material ** 		getMaterial() { return m_material; }
-	unsigned int 		getMaterialCount() { return m_materialCount; }
+	virtual void update(float dt);
+
+	Body * 							getBody() { return m_body; }
+	const std::vector<Material*>&	getMaterial() { return m_material; }
+	size_t 							getMaterialCount() { return m_material.size(); }
 
 protected:
+	void calculateAndSetBoneMatrices(int uniformLocation);
+
 	// Visuals
 	Body *			m_body;
-
-	Material **		m_material;
-	unsigned int 	m_materialCount;
+	std::vector<Material*>	m_material;
 
 	// Animation
+	bool			m_animPlaying;
 	float			m_animTime;
 	float			m_animSpeed;
-	int				m_loopCount;
+	int				m_animLoopCount;
 	Animation*		m_currentAnim;
-
 };

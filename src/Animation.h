@@ -6,9 +6,10 @@
 class AnimationChannel
 {
 	public:
-	AnimationChannel(size_t keyCount=0) :
-	m_pose(keyCount)
-	{}
+	AnimationChannel(size_t keyCount=0)
+	{
+		m_pose.reserve(keyCount);
+	}
 
 	~AnimationChannel()
 	{}
@@ -21,9 +22,12 @@ class AnimationChannel
 class Animation
 {
 public:
-	Animation(size_t channelCount = 0) :
-	m_channel(channelCount)
-	{}
+	Animation(size_t channelCount, float duration, float fps) :
+	m_duration(duration),
+	m_framesPerSecond(fps)
+	{
+		m_channel.reserve(channelCount);
+	}
 
 	~Animation()
 	{}
@@ -32,6 +36,10 @@ public:
 	const AnimationChannel & getChannel(size_t i) { return m_channel[i]; }
 
 	Transform getPoseAtTime(size_t channel, float t);
+
+	float getDuration() { return m_duration; }
+	float getFramesPerSecond() { return m_framesPerSecond; }
+
 private:
 	std::vector<AnimationChannel>	m_channel;
 

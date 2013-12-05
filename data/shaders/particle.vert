@@ -50,6 +50,8 @@ out vec3 	out_position;
 out vec3 	out_oldPosition;
 out float 	out_mass;
 
+const int		MAX_BONES = 128;
+
 uniform float 	dt = 0.016;
 
 uniform vec3 	externalForce	= vec3(0);
@@ -59,22 +61,40 @@ uniform float	randomForce		= 0;
 
 uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
+uniform mat4	boneMatrix[MAX_BONES];
 
 uniform float damping = .06;
 
 void main(void)
 {
-	// Perform skinning to get target position of vertex
-	vec3 targetPosition = (modelMatrix * vec4(in_vertexPosition,1)).xyz * 1.0;
+	float divisor = 0;
+	vec4 targetPosition = vec4(0,0,0,0);
+
+	for(int i=0; i<4; ++i)
+	{
+		if(in_vertexIndex[i] > -1)
+		{
+			targetPosition += in_vertexWeight[i] * boneMatrix[in_vertexIndex[i]] * vec4(in_vertexPosition,1);
+			divisor++;
+		}
+	}
+
+	if(divisor > 0)
+		targetPosition = targetPosition / divisor;
+	else
+		targetPosition = vec4(0,0,50,1); // Debug, make sure no vertex fall into this singularity
+
+	targetPosition = modelMatrix * targetPosition;
 
 	// Perhaps implement a static max distance from position to targetposition
 	// if the position is beyond this limit, move the position to the edge of this limit.
 
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
+	vec3 target = targetPosition.xyz;
 
-	//vec3 diff = length(targetPosition - pos);
-	vec3 attrForce = (targetPosition - pos) * 4.1;
+	//vec3 diff = length(target - pos);
+	vec3 attrForce = (target - pos) * 4.1;
 
 	float rf = randomForce * random( pos );
 	vec3 force = externalForce + attrForce + rf * in_vertexNormal;

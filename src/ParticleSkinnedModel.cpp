@@ -62,6 +62,9 @@ ParticleSkinnedModel::~ParticleSkinnedModel()
 
 void ParticleSkinnedModel::update(float dt)
 {
+	// Send update call to superclass
+	Model::update(dt);
+
 	int loc;
 
 	Shader * shader = m_ps.getShader();
@@ -73,6 +76,9 @@ void ParticleSkinnedModel::update(float dt)
 
 	loc = shader->getUniformLocation("invModelMatrix");
 	glUniformMatrix4fv(loc, 1, false, glm::value_ptr(getTransform().getInvMat4()));
+
+	loc = shader->getUniformLocation("boneMatrix");
+	calculateAndSetBoneMatrices(loc);
 
 	m_ps.update(dt);
 }

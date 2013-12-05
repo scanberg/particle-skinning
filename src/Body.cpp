@@ -5,6 +5,7 @@
 #include <assimp/scene.h>          // Output data structure
 #include <assimp/postprocess.h>    // Post processing flags
 #include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
+#include <glm/gtc/matrix_access.hpp>
 
 int findStringHashInVector(const StringHash & sh, const std::vector<StringHash> & v)
 {
@@ -22,10 +23,13 @@ void printNode(aiNode* node, size_t level)
 {
 	if (!node)
 		return;
+	
+	glm::mat4 mat = glm::make_mat4(node->mTransformation[0]);
+	glm::vec4 pos = glm::column(mat, 3);
 
 	for (size_t i = 0; i < level; ++i)
 		printf("  ");
-	printf("%s\n", node->mName.C_Str());
+	printf("%s, %.1f %.1f %.1f\n", node->mName.C_Str(), pos.x, pos.y, pos.z);
 
 	for (size_t i = 0; i < node->mNumChildren; ++i)
 		printNode(node->mChildren[i], level+1);
@@ -59,10 +63,12 @@ Body::Body(const char * meshfile)
 	}
 	
 	// Get array allocation data
-	int partCount = scene->mNumMeshes;
-	int vertexCount = 0;
-	int triangleCount = 0;
-	int boneCount = 0;
+	unsigned int partCount = scene->mNumMeshes;
+	unsigned int vertexCount = 0;
+	unsigned int triangleCount = 0;
+	unsigned int boneCount = 0;
+
+	unsigned int vertexWeightCounter = 0;
 
 	for (unsigned int i = 0; i<partCount; ++i) {
 		m_partData.push_back(sPart());
@@ -117,29 +123,46 @@ Body::Body(const char * meshfile)
 				fprintf(stderr, "Faces with != 3 indices not implemented\n");
 			}
 		}
+
 		// Get bones with weights
 		for(unsigned int j=0; j<mesh[i]->mNumBones; ++j) {
-			printf("New bone: %s \n", bone[j]->mName.C_Str());
 			StringHash sh(bone[j]->mName.C_Str());
 			int index = findStringHashInVector(sh, m_boneSH);
-			if (index > 0)
+			if (index == -1)
 			{
-				// do what? exists allready!
+				// Bone does not exist! create it!
+				printf("New bone: '%s'", sh.getStr());
+
+				index = (int)m_boneData.size();
+
+				m_boneSH.push_back(sh);
+				m_boneData.push_back(Transform(glm::make_mat4((float*)(bone[j]->mOffsetMatrix[0]))));
+				m_boneParent.push_back(-1);
 			}
-			m_boneSH.push_back(StringHash(bone[j]->mName.C_Str()));
-			m_boneData.push_back(Transform(glm::make_mat4( (float*)(bone[j]->mOffsetMatrix[0])) ));
-			m_boneParent.push_back(-1);
+			else
+				printf("Existing bone: '%s'", sh.getStr());
+
+			printf(", numWeights in bone: %i\n", bone[j]->mNumWeights);
 
 			for(unsigned int k=0; k<bone[j]->mNumWeights; ++k) {
 				const aiVertexWeight& vw = bone[j]->mWeights[k];
 
+				// Iterate over the weight-indices of this vertex and possibly add a new weight
 				for(unsigned int l=0; l<4; ++l) {
 					sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
-					if(v.index[l] != -1) {
-						v.index[l]  = boneOffset+j;
+
+					if (l == 3 && v.index[l] != -1)
+						printf("Warning: loosing vertex weight in vertex[%i] \n", vertexOffset+vw.mVertexId);
+
+					// If we find a free slot, (-1)
+					if(v.index[l] == -1) {
+						v.index[l]  = index;
 						v.weight[l] = vw.mWeight;
+						vertexWeightCounter++;
 						break;
 					}
+					
+					
 				}
 			}
 		}
@@ -157,8 +180,24 @@ Body::Body(const char * meshfile)
 	// print the local version of the hierarchy
 	for (size_t i = 0; i < getBoneCount(); ++i)
 	{
-		printf("[%i]%s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
+		printf("[%i] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
 	}
+	
+	unsigned int missingVertexWeights = 0;
+	for (size_t i = 0; i < getVertexCount(); ++i)
+	{
+		/*
+		printf("[%i] Vertex Weight: [%i, %.1f] [%i, %.1f] [%i, %.1f] [%i, %.1f]\n", i,
+			m_vertexData[i].index[0], m_vertexData[i].weight[0],
+			m_vertexData[i].index[1], m_vertexData[i].weight[1],
+			m_vertexData[i].index[2], m_vertexData[i].weight[2], 
+			m_vertexData[i].index[3], m_vertexData[i].weight[3] );
+		*/
+		if (m_vertexData[i].index[0] == -1)
+			missingVertexWeights++;
+	}
+	printf("Amount of vertex weights: %i \n", vertexWeightCounter);
+	printf("Amount of vertices missing weights: %i \n", missingVertexWeights);
 	
 	// If we have an animation named as the meshfile.md5anim
 	addAnimation(meshfile, "default");
@@ -258,7 +297,8 @@ void Body::addAnimation(const char* animationfile, const char* name)
 	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
 		printf("Name of animation: \"%s\"\n", name);
 		m_animationSH.push_back(StringHash(name));
-		m_animationData.push_back(Animation(scene->mAnimations[i]->mNumChannels));
+		m_animationData.push_back(
+			Animation(scene->mAnimations[i]->mNumChannels, scene->mAnimations[i]->mDuration, scene->mAnimations[i]->mTicksPerSecond));
 
 		Animation & anim = m_animationData[i];
 
@@ -323,7 +363,7 @@ void Body::addAnimation(const char* animationfile, const char* name)
 					scl = glm::make_vec3(&channel->mScalingKeys[k].mValue.x);
 				}
 
-				ch.m_pose[k] = Transform(pos, rot, scl);
+				ch.m_pose.push_back(Transform(pos, rot, scl));
 
 				//printf("P: %.2f %.2f %.2f, R: %.2f %.2f %.2f %.2f, S: %.2f %.2f %.2f\n",
 				//	pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, rot.w, scl.x, scl.y, scl.z);
@@ -360,6 +400,10 @@ void Body::fillBuffers()
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
 
 	glBindVertexArray(0);
 }

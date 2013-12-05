@@ -17,7 +17,7 @@ public:
 
 	struct sVertex
 	{
-		sVertex() : index(glm::ivec4(-1)) {};
+		sVertex() : index(glm::uvec4(-1)) {};
 		glm::vec3 	position;
 		glm::vec3 	normal;
 		glm::vec2 	texCoord;
@@ -42,27 +42,34 @@ public:
 	Body(const char * meshfile);
 	~Body();
 
+	size_t 			getPartCount() { return m_partData.size(); }
+	sPart * 		getPart(const StringHash & sh);
+	sPart *			getPart(size_t index);
+	int				getPartIndex(const StringHash & sh);
+
+	/* Bone */
+	const std::vector<Transform>&	getBoneTransforms() { return m_boneData; }
+	const std::vector<int>&			getBoneParents() { return m_boneParent; }
+
+	size_t 			getBoneCount() { return m_boneData.size(); }
+	Transform * 	getBone(const StringHash & sh);
+	Transform *		getBone(size_t index);
+	int				getBoneIndex(const StringHash & sh);
+
+	/* Animation */
+	const std::vector<Animation>& getAnimations() { return m_animationData; }
+
+	size_t		 	getAnimationCount() { return m_animationData.size(); }
+	Animation * 	getAnimation(const StringHash & sh);
+	Animation *		getAnimation(size_t index);
+	int				getAnimationIndex(const StringHash & sh);
+
+	/* Geometry */
 	sVertex *		getVertexData() { return &m_vertexData[0]; }
 	size_t 			getVertexCount() { return m_vertexData.size(); }
 
 	sTriangle * 	getTriangleData() { return &m_triangleData[0]; }
 	size_t			getTriangleCount() { return m_triangleData.size(); }
-
-	size_t 			getPartCount() { return m_partData.size(); }
-	size_t 			getBoneCount() { return m_boneData.size(); }
-	size_t		 	getAnimationCount() { return m_animationData.size(); }
-
-	sPart * 		getPart(const StringHash & sh);
-	sPart *			getPart(size_t index);
-	int				getPartIndex(const StringHash & sh);
-
-	Transform * 	getBone(const StringHash & sh);
-	Transform *		getBone(size_t index);
-	int				getBoneIndex(const StringHash & sh);
-
-	Animation * 	getAnimation(const StringHash & sh);
-	Animation *		getAnimation(size_t index);
-	int				getAnimationIndex(const StringHash & sh);
 
 	unsigned int 	getVertexArray() { return m_va; }
 	unsigned int 	getVertexBuffer() { return m_vb; }

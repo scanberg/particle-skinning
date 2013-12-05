@@ -5,7 +5,7 @@
 class Shader
 {
 public:
-	static Shader * getBoundShader();
+	static Shader * getBoundShader() { return s_boundShader; }
 
 	Shader();
 	~Shader();

@@ -47,18 +47,20 @@ int main()
 
     particleShader.link();
 
-    Body bobMesh("data/pinky/pinky.md5mesh");
-    bobMesh.addAnimation("data/pinky/idle1.md5anim", "idle");
+    Body body("data/bob/bob.md5mesh");
+    //body.addAnimation("data/bob/bob.md5anim", "idle");
 
-    ParticleSkinnedModel bob( &particleShader, &bobMesh );
+    ParticleSkinnedModel model( &particleShader, &body );
+	model.setAnimation("default");
+	model.play();
 
 	Camera camera;
 
     camera.setPosition(glm::vec3(0,0,5));
 
-    bob.rotate(glm::vec3(-90,0,0));
-    bob.setScale(glm::vec3(0.05));
-    bob.setPosition(glm::vec3(0,-3,0));
+    model.rotate(glm::vec3(-90,0,0));
+    model.setScale(glm::vec3(0.1));
+    model.setPosition(glm::vec3(0,-2,0));
 
     // queries for accurate profiling of opengl calls.
     unsigned int queryID[TIMESTAMPS];
@@ -81,7 +83,7 @@ int main()
 		//bob.addRandomImpulse(5.0f);
 
         glQueryCounter(queryID[0], GL_TIMESTAMP);
-        bob.update((float)dt);
+        model.update((float)dt);
         glQueryCounter(queryID[1], GL_TIMESTAMP);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -99,7 +101,7 @@ int main()
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
 
         /* Render here */
-        bob.draw();
+        model.draw();
 
         glQueryCounter(queryID[2], GL_TIMESTAMP);
 
