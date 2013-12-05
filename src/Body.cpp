@@ -93,7 +93,6 @@ Body::Body(const char * meshfile)
 	aiVector3D* normal;
 	aiVector3D** texCoord;
 	aiFace* face;
-	aiVertexWeight** weight;
 
 	unsigned int vertexOffset = 0, triangleOffset = 0, boneOffset = 0;
 
@@ -180,7 +179,7 @@ Body::Body(const char * meshfile)
 	// print the local version of the hierarchy
 	for (size_t i = 0; i < getBoneCount(); ++i)
 	{
-		printf("[%i] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
+		printf("[%zu] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
 	}
 	
 	unsigned int missingVertexWeights = 0;
@@ -216,7 +215,7 @@ Body::~Body()
 
 Body::sPart * Body::getPart(const StringHash & sh)
 {
-	for (int i = 0; i < getPartCount(); ++i)
+	for (size_t i = 0; i < getPartCount(); ++i)
 	{
 		if (m_partSH[i] == sh)
 			return &m_partData[i];
@@ -227,7 +226,7 @@ Body::sPart * Body::getPart(const StringHash & sh)
 
 Body::sPart * Body::getPart(size_t index)
 {
-	if (-1 < index && index < getPartCount())
+	if (index < getPartCount())
 		return &m_partData[index];
 
 	return nullptr;
@@ -240,7 +239,7 @@ int	Body::getPartIndex(const StringHash & sh)
 
 Transform * Body::getBone(const StringHash & sh)
 {
-	for (int i = 0; i < getBoneCount(); ++i)
+	for (size_t i = 0; i < getBoneCount(); ++i)
 	{
 		if (m_boneSH[i] == sh)
 			return &m_boneData[i];
@@ -251,7 +250,7 @@ Transform * Body::getBone(const StringHash & sh)
 
 Transform * Body::getBone(size_t index)
 {
-	if (-1 < index && index < getBoneCount())
+	if (index < getBoneCount())
 		return &m_boneData[index];
 
 	return nullptr;
@@ -264,7 +263,7 @@ int Body::getBoneIndex(const StringHash & sh)
 
 Animation * Body::getAnimation(const StringHash & sh)
 {
-	for (int i = 0; i < getAnimationCount(); ++i)
+	for (size_t i = 0; i < getAnimationCount(); ++i)
 	{
 		if (m_animationSH[i] == sh)
 			return &m_animationData[i];
@@ -275,7 +274,7 @@ Animation * Body::getAnimation(const StringHash & sh)
 
 Animation * Body::getAnimation(size_t index)
 {
-	if (-1 < index && index < getAnimationCount())
+	if (index < getAnimationCount())
 		return &m_animationData[index];
 
 	return nullptr;
