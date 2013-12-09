@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <FreeImage.h>
+//#include <FreeImage.h>
 
 class Material
 {

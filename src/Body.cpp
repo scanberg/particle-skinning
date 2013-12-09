@@ -7,6 +7,18 @@
 #include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
 #include <glm/gtc/matrix_access.hpp>
 
+inline void copyAiMatrixToGLM(const aiMatrix4x4 *from, glm::mat4 &to)
+{
+        to[0][0] = (GLfloat)from->a1; to[1][0] = (GLfloat)from->a2;
+        to[2][0] = (GLfloat)from->a3; to[3][0] = (GLfloat)from->a4;
+        to[0][1] = (GLfloat)from->b1; to[1][1] = (GLfloat)from->b2;
+        to[2][1] = (GLfloat)from->b3; to[3][1] = (GLfloat)from->b4;
+        to[0][2] = (GLfloat)from->c1; to[1][2] = (GLfloat)from->c2;
+        to[2][2] = (GLfloat)from->c3; to[3][2] = (GLfloat)from->c4;
+        to[0][3] = (GLfloat)from->d1; to[1][3] = (GLfloat)from->d2;
+        to[2][3] = (GLfloat)from->d3; to[3][3] = (GLfloat)from->d4;
+}
+
 int findStringHashInVector(const StringHash & sh, const std::vector<StringHash> & v)
 {
 	for (int i = 0; i < (int)v.size(); ++i)
@@ -23,13 +35,10 @@ void printNode(aiNode* node, size_t level)
 {
 	if (!node)
 		return;
-	
-	glm::mat4 mat = glm::make_mat4(node->mTransformation[0]);
-	glm::vec4 pos = glm::column(mat, 3);
 
 	for (size_t i = 0; i < level; ++i)
 		printf("  ");
-	printf("%s, %.1f %.1f %.1f\n", node->mName.C_Str(), pos.x, pos.y, pos.z);
+	printf("%s\n", node->mName.C_Str());
 
 	for (size_t i = 0; i < node->mNumChildren; ++i)
 		printNode(node->mChildren[i], level+1);
@@ -82,7 +91,7 @@ Body::Body(const char * meshfile)
 
 	m_vertexData.reserve(vertexCount);
 	m_triangleData.reserve(triangleCount);
-	m_boneData.reserve(boneCount);
+	m_boneOffset.reserve(boneCount);
 	m_boneSH.reserve(boneCount);
 	m_boneParent.reserve(boneCount);
 
@@ -106,9 +115,9 @@ Body::Body(const char * meshfile)
 		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
 			m_vertexData.push_back(sVertex());
-			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j][0],	vertex[j][1],	vertex[j][2]);
-			m_vertexData[vertexOffset + j].normal	= glm::vec3(normal[j][0],	normal[j][1],	normal[j][2]);
-			//m_vertexData[vertexOffset + j].texCoord = glm::vec2(texCoord[j][0][0], texCoord[j][0][1]);
+			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j].x,	vertex[j].y,	vertex[j].z);
+			m_vertexData[vertexOffset + j].normal	= glm::vec3(normal[j].x,	normal[j].y,	normal[j].z);
+			m_vertexData[vertexOffset + j].texCoord = glm::vec2(texCoord[0][j][0], texCoord[0][j][1]);
 		}
 
 		// Get triangle indices
@@ -132,11 +141,13 @@ Body::Body(const char * meshfile)
 				// Bone does not exist! create it!
 				printf("New bone: '%s'", sh.getStr());
 
-				index = (int)m_boneData.size();
+				index = (int)m_boneOffset.size();
 
 				m_boneSH.push_back(sh);
-				m_boneData.push_back(Transform(glm::make_mat4((float*)(bone[j]->mOffsetMatrix[0]))));
 				m_boneParent.push_back(-1);
+				glm::mat4 M;
+				copyAiMatrixToGLM(&bone[j]->mOffsetMatrix, M);
+				m_boneOffset.push_back(Transform(M));
 			}
 			else
 				printf("Existing bone: '%s'", sh.getStr());
@@ -177,9 +188,9 @@ Body::Body(const char * meshfile)
 	readBoneHierarchy(scene->mRootNode, -1);
 
 	// print the local version of the hierarchy
-	for (size_t i = 0; i < getBoneCount(); ++i)
+	for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
 	{
-		printf("[%zu] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
+		printf("[%u] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
 	}
 	
 	unsigned int missingVertexWeights = 0;
@@ -242,7 +253,7 @@ Transform * Body::getBone(const StringHash & sh)
 	for (size_t i = 0; i < getBoneCount(); ++i)
 	{
 		if (m_boneSH[i] == sh)
-			return &m_boneData[i];
+			return &m_boneOffset[i];
 	}
 
 	return nullptr;
@@ -251,7 +262,7 @@ Transform * Body::getBone(const StringHash & sh)
 Transform * Body::getBone(size_t index)
 {
 	if (index < getBoneCount())
-		return &m_boneData[index];
+		return &m_boneOffset[index];
 
 	return nullptr;
 }
@@ -303,72 +314,34 @@ void Body::addAnimation(const char* animationfile, const char* name)
 
 		printf("%s\n", m_animationSH[i].getStr());
 		for(unsigned int j=0; j<scene->mAnimations[i]->mNumChannels; ++j) {
-
+			
 			aiNodeAnim * channel = scene->mAnimations[i]->mChannels[j];
 			unsigned int posKeys = channel->mNumPositionKeys;
 			unsigned int rotKeys = channel->mNumRotationKeys;
 			unsigned int sclKeys = channel->mNumScalingKeys;
 			unsigned int maxKeys = glm::max(posKeys, glm::max(rotKeys, sclKeys));
+			StringHash channel_sh(channel->mNodeName.C_Str());
 
 			AnimationChannel ch(maxKeys);
-
-			printf("%d %d %d\n", posKeys, rotKeys, sclKeys);
-
-			bool iplPos = posKeys < maxKeys;
-			bool iplRot = rotKeys < maxKeys;
-			bool iplScl = sclKeys < maxKeys;
 
 			for(unsigned int k=0; k<maxKeys; ++k)
 			{
 				float w = (float)k / (float)maxKeys;
 				int lowerFrame, upperFrame;
-				glm::vec3 pos;
-				glm::quat rot;
-				glm::vec3 scl;
 
-				if(iplPos) {
-					lowerFrame = (int) (w * posKeys);
-					upperFrame = lowerFrame + 1;
-					glm::vec3 lowerPos = glm::make_vec3(&channel->mPositionKeys[lowerFrame].mValue.x);
-					glm::vec3 upperPos = glm::make_vec3(&channel->mPositionKeys[upperFrame].mValue.x);
-					pos = glm::mix(lowerPos, upperPos, w);
-				} else {
-					pos = glm::make_vec3(&channel->mPositionKeys[k].mValue.x);
-				}
+				const aiVector3D &		aPos = channel->mPositionKeys[0].mValue;
+				const aiQuaternion &	aRot = channel->mRotationKeys[0].mValue;
+				const aiVector3D &		aScl = channel->mScalingKeys[0].mValue;
 
-				if(iplRot) {
-					lowerFrame = (int) (w * rotKeys);
-					upperFrame = lowerFrame + 1;
-					glm::quat lowerRot = glm::make_quat(&channel->mRotationKeys[lowerFrame].mValue.x);
-					glm::quat upperRot = glm::make_quat(&channel->mRotationKeys[upperFrame].mValue.x);
-					rot = glm::slerp(lowerRot, upperRot, w);
-				} else {
-					rot = glm::make_quat(&channel->mRotationKeys[k].mValue.x);
-				}
-
-				if(iplScl) {
-					if(sclKeys == 1) {
-						scl = glm::make_vec3(&channel->mScalingKeys[0].mValue.x);
-					}
-					else
-					{
-						lowerFrame = (int) (w * sclKeys);
-						upperFrame = lowerFrame + 1;
-						glm::vec3 lowerScl = glm::make_vec3(&channel->mScalingKeys[lowerFrame].mValue.x);
-						glm::vec3 upperScl = glm::make_vec3(&channel->mScalingKeys[upperFrame].mValue.x);
-						scl = glm::mix(lowerScl, upperScl, w);
-					}
-				} else {
-					scl = glm::make_vec3(&channel->mScalingKeys[k].mValue.x);
-				}
+				glm::vec3 pos = glm::vec3(aPos.x, aPos.y, aPos.z);
+				glm::quat rot = glm::quat(aRot.w, aRot.x, aRot.y, aRot.z);
+				glm::vec3 scl = glm::vec3(1.0f);
 
 				ch.m_pose.push_back(Transform(pos, rot, scl));
-
-				//printf("P: %.2f %.2f %.2f, R: %.2f %.2f %.2f %.2f, S: %.2f %.2f %.2f\n",
-				//	pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, rot.w, scl.x, scl.y, scl.z);
-
 			}
-			anim.addChannel(ch);
+			int index = getBoneIndex(channel_sh);
+			if(index > -1)
+				anim.setChannel((size_t)index, ch);
 		}
 	}
 }
@@ -380,11 +353,14 @@ void Body::readBoneHierarchy(aiNode* node, int parent)
 
 	StringHash sh(node->mName.C_Str());
 	int index = getBoneIndex(sh);
-	if (-1 < index)
+	if (index > -1)
+	{
 		m_boneParent[index] = parent;
+		parent = index;
+	}
 
 	for (size_t i = 0; i < node->mNumChildren; ++i)
-		readBoneHierarchy(node->mChildren[i], index);
+		readBoneHierarchy(node->mChildren[i], parent);
 }
 
 void Body::fillBuffers()

@@ -25,6 +25,11 @@ public:
 
 	static Transform interpolate(const Transform & t0, const Transform & t1, float k);
 
+	Transform operator + (const Transform &rhs) const;
+	Transform operator - (const Transform &rhs) const;
+	Transform operator * (const Transform &rhs) const;
+	Transform operator * (float rhs) const;
+
 private:
 	glm::vec3 m_translation;
 	glm::quat m_orientation;

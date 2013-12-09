@@ -34,6 +34,11 @@ void Transform::setMat4(const glm::mat4 &matrix)
 	glm::quat orientation = glm::quat_cast(matrix);
 	glm::vec3 translation = c[3];
 
+	/*printf("Result: S: %.2f %.2f %.2f, R: %.2f %.2f %.2f %.2f, T: %.2f %.2f %.2f\n",
+		scale.x, scale.y, scale.z,
+		orientation.w, orientation.x, orientation.y, orientation.z,
+		translation.x, translation.y, translation.z);*/
+
 	setScale(scale);
 	setOrientation(orientation);
 	setTranslation(translation);
@@ -59,14 +64,14 @@ glm::mat4 Transform::getInvMat4() const
 
 Transform Transform::interpolate(const Transform & t0, const Transform & t1, float k)
 {
-	Transform t;
+	Transform T;
 	k = glm::clamp(k, 0.0f, 1.0f);
 	float k0 = 1.0f-k;
 	float k1 = k;
 
-	t.setTranslation(t0.getTranslation() * k0 + t1.getTranslation() * k1);
-	t.setOrientation(glm::slerp(t0.getOrientation(), t1.getOrientation(), k));
-	t.setScale(t0.getScale() * k0 + t1.getScale() * k1);
+	T.setTranslation(t0.getTranslation() * k0 + t1.getTranslation() * k1);
+	T.setOrientation(glm::slerp(t0.getOrientation(), t1.getOrientation(), k));
+	T.setScale(t0.getScale() * k0 + t1.getScale() * k1);
 
-	return t;
+	return T;
 }

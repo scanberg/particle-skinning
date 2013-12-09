@@ -12,8 +12,8 @@
 #include "ParticleSkinnedModel.h"
 
 #define SUCCESS 1
-#define WIDTH 	640
-#define HEIGHT 	480
+#define WIDTH 	1024
+#define HEIGHT 	768
 #define TIMESTAMPS 3
 
 int initGL(int width, int height);
@@ -47,20 +47,20 @@ int main()
 
     particleShader.link();
 
-    Body body("data/bob/bob.md5mesh");
-    //body.addAnimation("data/bob/bob.md5anim", "idle");
+    Body body("data/hellknight/hellknight.md5mesh");
+    body.addAnimation("data/hellknight/idle2.md5anim", "idle");
 
     ParticleSkinnedModel model( &particleShader, &body );
-	model.setAnimation("default");
+	model.setAnimation("idle");
 	model.play();
 
 	Camera camera;
 
-    camera.setPosition(glm::vec3(0,0,5));
+    camera.setPosition(glm::vec3(0,4,10));
 
-    model.rotate(glm::vec3(-90,0,0));
+    model.rotate(glm::vec3(0,0,0));
     model.setScale(glm::vec3(0.1));
-    model.setPosition(glm::vec3(0,-2,0));
+    model.setPosition(glm::vec3(0,0,0));
 
     // queries for accurate profiling of opengl calls.
     unsigned int queryID[TIMESTAMPS];
@@ -77,17 +77,27 @@ int main()
         static double t = 0;
         t += dt;
 
-		//if (glfwGetKey(g_window, GLFW_KEY_SPACE))
-            //bob.rotate(glm::vec3(0,0,3*glm::cos(2.0*t)*dt));
+		if (glfwGetKey(g_window, GLFW_KEY_SPACE))
+            model.addRandomImpulse(5.0f);
 
-		//bob.addRandomImpulse(5.0f);
+		if (glfwGetKey(g_window, GLFW_KEY_LEFT))
+			model.rotate(glm::vec3(0,-dt*1,0));
+
+		if (glfwGetKey(g_window, GLFW_KEY_RIGHT))
+			model.rotate(glm::vec3(0,dt*1,0));
+
+		if (glfwGetKey(g_window, GLFW_KEY_UP))
+			model.rotate(glm::vec3(0,0,dt*1));
+
+		if (glfwGetKey(g_window, GLFW_KEY_DOWN))
+			model.rotate(glm::vec3(0,0,-dt*1));
 
         glQueryCounter(queryID[0], GL_TIMESTAMP);
         model.update((float)dt);
         glQueryCounter(queryID[1], GL_TIMESTAMP);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, 640, 480);
+        glViewport(0, 0, WIDTH, HEIGHT);
 
         glEnable(GL_DEPTH_TEST);
         //glEnable(GL_CULL_FACE);
@@ -141,7 +151,7 @@ int initGL(int width, int height)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(g_window);
-	//glfwSwapInterval(1);
+	glfwSwapInterval(1);
 
     glewExperimental = GL_TRUE;
 	GLenum error = glewInit();

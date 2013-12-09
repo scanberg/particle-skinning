@@ -5,6 +5,8 @@ Transform Animation::getPoseAtTime(size_t channel, float t)
 	if (channel > m_channel.size())
 		return Transform();
 	t = glm::clamp(t, 0.0f, m_duration);
+
+	return m_channel[channel].m_pose[0];
 	
 	size_t frameLast = m_channel[channel].getKeyCount()-1;
 	size_t frame0 = (size_t)(t / m_duration) * frameLast;

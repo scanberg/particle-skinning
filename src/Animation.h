@@ -26,13 +26,15 @@ public:
 	m_duration(duration),
 	m_framesPerSecond(fps)
 	{
-		m_channel.reserve(channelCount);
+		m_channel.resize(channelCount);
 	}
 
 	~Animation()
 	{}
 
 	void addChannel(const AnimationChannel & ac) { m_channel.push_back(ac); }
+	void setChannel(size_t i, const AnimationChannel & ac) { if(i<m_channel.size()) m_channel[i] = ac; }
+
 	const AnimationChannel & getChannel(size_t i) { return m_channel[i]; }
 
 	Transform getPoseAtTime(size_t channel, float t);

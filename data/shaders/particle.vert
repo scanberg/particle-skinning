@@ -67,22 +67,15 @@ uniform float damping = .06;
 
 void main(void)
 {
-	float divisor = 0;
 	vec4 targetPosition = vec4(0,0,0,0);
 
 	for(int i=0; i<4; ++i)
 	{
 		if(in_vertexIndex[i] > -1)
-		{
 			targetPosition += in_vertexWeight[i] * boneMatrix[in_vertexIndex[i]] * vec4(in_vertexPosition,1);
-			divisor++;
-		}
+		else
+			break;
 	}
-
-	if(divisor > 0)
-		targetPosition = targetPosition / divisor;
-	else
-		targetPosition = vec4(0,0,50,1); // Debug, make sure no vertex fall into this singularity
 
 	targetPosition = modelMatrix * targetPosition;
 

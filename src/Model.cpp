@@ -79,11 +79,10 @@ void Model::calculateAndSetBoneMatrices(int uniformLocation)
 	assert(boneCount < max_bones);
 
 	const std::vector<int>& boneParent = m_body->getBoneParents();
-	const std::vector<Transform>& boneTransform = m_body->getBoneTransforms();
+	const std::vector<Transform>& boneOffset = m_body->getBoneOffsets();
 	// Update Local poses
 	for (size_t i = 0; i < boneCount; ++i)
-		localMat[i] = boneTransform[i].getMat4();
-		//localMat[i] = m_currentAnim->getPoseAtTime(i, m_animTime).getMat4();
+		localMat[i] = m_currentAnim->getPoseAtTime(i, m_animTime).getMat4();
 
 	// Calculate Final poses
 	for (size_t i = 0; i < boneCount; ++i)
@@ -97,6 +96,8 @@ void Model::calculateAndSetBoneMatrices(int uniformLocation)
 			finalMat[i] = localMat[parent] * finalMat[i];
 			parent = boneParent[parent];
 		}
+
+		finalMat[i] = finalMat[i] * boneOffset[i].getMat4();
 	}
 
 	glUniformMatrix4fv(uniformLocation, (GLsizei)boneCount, GL_FALSE, glm::value_ptr(finalMat[0]));

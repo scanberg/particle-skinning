@@ -48,10 +48,10 @@ public:
 	int				getPartIndex(const StringHash & sh);
 
 	/* Bone */
-	const std::vector<Transform>&	getBoneTransforms() { return m_boneData; }
+	const std::vector<Transform>&	getBoneOffsets() { return m_boneOffset; }
 	const std::vector<int>&			getBoneParents() { return m_boneParent; }
 
-	size_t 			getBoneCount() { return m_boneData.size(); }
+	size_t 			getBoneCount() { return m_boneOffset.size(); }
 	Transform * 	getBone(const StringHash & sh);
 	Transform *		getBone(size_t index);
 	int				getBoneIndex(const StringHash & sh);
@@ -98,7 +98,7 @@ private:
 
 	// Bone transformations
 	std::vector<StringHash>	m_boneSH;
-	std::vector<Transform> 	m_boneData;
+	std::vector<Transform> 	m_boneOffset;
 	std::vector<int>		m_boneParent;
 
 	// Animation data
