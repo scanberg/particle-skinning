@@ -22,37 +22,6 @@ GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int part
 	initData(particleData, particleCount);
 }
 
-GPUParticleSystem::GPUParticleSystem(Body * body, Shader * shader)
-{
-	assert(body);
-	assert(shader);
-
-    size_t		particleCount = body->getVertexCount();
-    sParticle * particleData = new sParticle[particleCount];
-
-    for(size_t i=0; i<particleCount; ++i)
-    {
-        const Body::sVertex v = body->getVertexData()[i];
-        sParticle& p = particleData[i];
-		p.oldPosition = p.position = v.position;
-		p.mass = 0.1f;
-    }
-
-	m_time = 0;
-	m_va[0] = m_va[1] = 0;
-	m_vb[0] = m_vb[1] = 0;
-	m_particleCount = particleCount;
-	m_target = 0;
-	m_shader = shader;
-
-	glGenVertexArrays(2, m_va);
-	glGenBuffers(2, m_vb);
-
-	initData(particleData, particleCount);
-
-	delete[] particleData;
-}
-
 GPUParticleSystem::~GPUParticleSystem()
 {
 	glDeleteBuffers(2, m_vb);

@@ -9,7 +9,6 @@ class GPUParticleSystem : public ParticleSystem
 {
 public:
 	GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader);
-	GPUParticleSystem(Body * body, Shader * shader);
 	~GPUParticleSystem();
 
 	void setStaticAcceleration(const glm::vec3 &acc);

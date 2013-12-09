@@ -63,7 +63,7 @@ uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 uniform mat4	boneMatrix[MAX_BONES];
 
-uniform float damping = .06;
+uniform float damping = .95;
 
 void main(void)
 {
@@ -87,13 +87,14 @@ void main(void)
 	vec3 target = targetPosition.xyz;
 
 	//vec3 diff = length(target - pos);
-	vec3 attrForce = (target - pos) * 4.1;
+	vec3 attrForce = (target - pos) * 100.1;
 
 	float rf = randomForce * random( pos );
 	vec3 force = externalForce + attrForce + rf * in_vertexNormal;
 	vec3 acc = externalAcc + force / in_mass;
 
 	out_position = (2-damping) * pos - (1-damping) * old + acc * dt * dt;
+	//out_position = vec3(modelMatrix * vec4(in_position, 1));
 	out_oldPosition = in_position;
 	out_mass = in_mass;
 }

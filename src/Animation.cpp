@@ -4,13 +4,17 @@ Transform Animation::getPoseAtTime(size_t channel, float t)
 {
 	if (channel > m_channel.size())
 		return Transform();
+
 	t = glm::clamp(t, 0.0f, m_duration);
 
-	return m_channel[channel].m_pose[0];
+	//return m_channel[channel].m_pose[0];
 	
-	size_t frameLast = m_channel[channel].getKeyCount()-1;
-	size_t frame0 = (size_t)(t / m_duration) * frameLast;
-	size_t frame1 = (frame0 + 1) > frameLast ? 0 : (frame0 + 1);
+	int frameLast = m_channel[channel].getKeyCount()-1;
+	int frame0 = (int)((t / m_duration) * frameLast);
+	int frame1 = (frame0 + 1) > frameLast ? 0 : (frame0 + 1);
+
+	//if(channel == 0)
+	//	printf("time: %.2f, frame0: %i, frame1: %i, lastFrame %i \n", t, frame0, frame1, frameLast);
 
 	float k = t - ((float)frame0 / (float)frameLast) * m_duration;
 

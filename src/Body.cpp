@@ -305,10 +305,14 @@ void Body::addAnimation(const char* animationfile, const char* name)
 		return;
 
 	for(unsigned int i=0; i<scene->mNumAnimations; ++i) {
-		printf("Name of animation: \"%s\"\n", name);
+		unsigned int	numChannels		= scene->mAnimations[i]->mNumChannels;
+		double			duration		= scene->mAnimations[i]->mDuration;
+		double			ticksPerSecond	= scene->mAnimations[i]->mTicksPerSecond;
+
+		printf("New animation: '%s', channels: %i, duration %.2f, tps: %.2f\n", name, numChannels, duration, ticksPerSecond);
+
 		m_animationSH.push_back(StringHash(name));
-		m_animationData.push_back(
-			Animation(scene->mAnimations[i]->mNumChannels, scene->mAnimations[i]->mDuration, scene->mAnimations[i]->mTicksPerSecond));
+		m_animationData.push_back(Animation(numChannels, duration/ticksPerSecond, ticksPerSecond));
 
 		Animation & anim = m_animationData[i];
 
@@ -329,8 +333,8 @@ void Body::addAnimation(const char* animationfile, const char* name)
 				float w = (float)k / (float)maxKeys;
 				int lowerFrame, upperFrame;
 
-				const aiVector3D &		aPos = channel->mPositionKeys[0].mValue;
-				const aiQuaternion &	aRot = channel->mRotationKeys[0].mValue;
+				const aiVector3D &		aPos = channel->mPositionKeys[k].mValue;
+				const aiQuaternion &	aRot = channel->mRotationKeys[k].mValue;
 				const aiVector3D &		aScl = channel->mScalingKeys[0].mValue;
 
 				glm::vec3 pos = glm::vec3(aPos.x, aPos.y, aPos.z);

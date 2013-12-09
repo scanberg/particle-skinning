@@ -2,13 +2,30 @@
 
 #include "ParticleSkinnedModel.h"
 
-ParticleSkinnedModel::ParticleSkinnedModel(Shader * particleShader, Body * body, Material ** mat, unsigned int materialCount)
-:
-Model(body, mat, materialCount),
-m_ps(body, particleShader)
+ParticleSkinnedModel::ParticleSkinnedModel(Shader * particleShader, Body * body, Material ** mat, unsigned int materialCount) :
+Model(body, mat, materialCount)
 {
 	assert(particleShader);
 	assert(body);
+
+    size_t		particleCount = body->getVertexCount();
+    sParticle * particleData = new sParticle[particleCount];
+
+	Transform T;
+	T.setScale(glm::vec3(0.07));
+
+    for(size_t i=0; i<particleCount; ++i)
+    {
+        const Body::sVertex v = body->getVertexData()[i];
+        sParticle& p = particleData[i];
+		p.oldPosition = p.position = glm::vec3(T.getMat4() * glm::vec4(v.position, 1));
+		p.mass = 0.1f;
+    }
+
+	m_ps = new GPUParticleSystem(particleData, particleCount, particleShader);
+	assert(m_ps);
+
+	delete[] particleData;
 
 	int positionAttr 	= particleShader->getAttribLocation("in_vertexPosition");
 	int normalAttr 		= particleShader->getAttribLocation("in_vertexNormal");
@@ -18,7 +35,7 @@ m_ps(body, particleShader)
 
 	const char * pOffset = 0;
 
-	glBindVertexArray(m_ps.getSourceVA());
+	glBindVertexArray(m_ps->getSourceVA());
 
 		glBindBuffer(GL_ARRAY_BUFFER, body->getVertexBuffer());
 
@@ -36,7 +53,7 @@ m_ps(body, particleShader)
 
 	glBindVertexArray(0);
 
-	glBindVertexArray(m_ps.getTargetVA());
+	glBindVertexArray(m_ps->getTargetVA());
 
 		glBindBuffer(GL_ARRAY_BUFFER, body->getVertexBuffer());
 
@@ -57,7 +74,7 @@ m_ps(body, particleShader)
 
 ParticleSkinnedModel::~ParticleSkinnedModel()
 {
-	
+	delete m_ps;
 }
 
 void ParticleSkinnedModel::update(float dt)
@@ -67,9 +84,9 @@ void ParticleSkinnedModel::update(float dt)
 
 	int loc;
 
-	Shader * shader = m_ps.getShader();
+	Shader * shader = m_ps->getShader();
 
-	m_ps.getShader()->bind();
+	m_ps->getShader()->bind();
 
 	loc = shader->getUniformLocation("modelMatrix");
 	glUniformMatrix4fv(loc, 1, false, glm::value_ptr(getTransform().getMat4()));
@@ -80,17 +97,19 @@ void ParticleSkinnedModel::update(float dt)
 	loc = shader->getUniformLocation("boneMatrix");
 	calculateAndSetBoneMatrices(loc);
 
-	m_ps.update(dt);
+	//printf("animation time %.2f\n",m_animTime);
+
+	m_ps->update(dt);
 }
 
 void ParticleSkinnedModel::draw()
 {
-    glBindVertexArray(m_ps.getTargetVA());
+    glBindVertexArray(m_ps->getTargetVA());
     //glBindVertexArray(m_body->getVertexArray());
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
     //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
 
     glPointSize(2);
-    glDrawArrays(GL_POINTS, 0, m_ps.getParticleCount());
+    glDrawArrays(GL_POINTS, 0, m_ps->getParticleCount());
     glBindVertexArray(0);
 }

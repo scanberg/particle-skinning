@@ -42,8 +42,3 @@ void Entity::rotate(const glm::vec3 & eulerAngles)
 	glm::mat3 R = glm::orientate3(xyz);
 	rotate(glm::quat_cast(R));
 }
-
-Transform Entity::getTransform()
-{
-	return m_transform;
-}

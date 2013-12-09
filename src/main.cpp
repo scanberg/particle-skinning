@@ -59,7 +59,7 @@ int main()
     camera.setPosition(glm::vec3(0,4,10));
 
     model.rotate(glm::vec3(0,0,0));
-    model.setScale(glm::vec3(0.1));
+    model.setScale(glm::vec3(0.07));
     model.setPosition(glm::vec3(0,0,0));
 
     // queries for accurate profiling of opengl calls.
@@ -85,12 +85,6 @@ int main()
 
 		if (glfwGetKey(g_window, GLFW_KEY_RIGHT))
 			model.rotate(glm::vec3(0,dt*1,0));
-
-		if (glfwGetKey(g_window, GLFW_KEY_UP))
-			model.rotate(glm::vec3(0,0,dt*1));
-
-		if (glfwGetKey(g_window, GLFW_KEY_DOWN))
-			model.rotate(glm::vec3(0,0,-dt*1));
 
         glQueryCounter(queryID[0], GL_TIMESTAMP);
         model.update((float)dt);

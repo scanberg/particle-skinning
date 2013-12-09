@@ -66,12 +66,10 @@ Transform Transform::interpolate(const Transform & t0, const Transform & t1, flo
 {
 	Transform T;
 	k = glm::clamp(k, 0.0f, 1.0f);
-	float k0 = 1.0f-k;
-	float k1 = k;
 
-	T.setTranslation(t0.getTranslation() * k0 + t1.getTranslation() * k1);
+	T.setTranslation(glm::mix(t0.getTranslation(), t1.getTranslation(), k));
 	T.setOrientation(glm::slerp(t0.getOrientation(), t1.getOrientation(), k));
-	T.setScale(t0.getScale() * k0 + t1.getScale() * k1);
+	T.setScale(glm::mix(t0.getScale(), t1.getScale(), k));
 
 	return T;
 }
