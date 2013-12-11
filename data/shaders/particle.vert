@@ -55,7 +55,7 @@ const int		MAX_BONES = 128;
 uniform float 	dt = 0.016;
 
 uniform vec3 	externalForce	= vec3(0);
-uniform vec3 	externalAcc		= vec3(0,0,-9.82);
+uniform vec3 	externalAcc		= vec3(0,-982,0);
 
 uniform float	randomForce		= 0;
 
@@ -63,21 +63,16 @@ uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 uniform mat4	boneMatrix[MAX_BONES];
 
-uniform float damping = .95;
+uniform float damping = .25;
 
 void main(void)
 {
-	vec4 targetPosition = vec4(0,0,0,0);
+	vec4 targetPosition	=	in_vertexWeight[0] * boneMatrix[in_vertexIndex[0]] * vec4(in_vertexPosition,1);
+	targetPosition		+=	in_vertexWeight[1] * boneMatrix[in_vertexIndex[1]] * vec4(in_vertexPosition,1);
+	targetPosition		+=	in_vertexWeight[2] * boneMatrix[in_vertexIndex[2]] * vec4(in_vertexPosition,1);
+	targetPosition		+=	in_vertexWeight[3] * boneMatrix[in_vertexIndex[3]] * vec4(in_vertexPosition,1);
 
-	for(int i=0; i<4; ++i)
-	{
-		if(in_vertexIndex[i] > -1)
-			targetPosition += in_vertexWeight[i] * boneMatrix[in_vertexIndex[i]] * vec4(in_vertexPosition,1);
-		else
-			break;
-	}
-
-	targetPosition = modelMatrix * targetPosition;
+	//targetPosition = modelMatrix * targetPosition;
 
 	// Perhaps implement a static max distance from position to targetposition
 	// if the position is beyond this limit, move the position to the edge of this limit.
@@ -87,14 +82,15 @@ void main(void)
 	vec3 target = targetPosition.xyz;
 
 	//vec3 diff = length(target - pos);
-	vec3 attrForce = (target - pos) * 100.1;
+	vec3 attrForce = (target - pos) * 50.1;
 
-	float rf = randomForce * random( pos );
+	//float rf = randomForce * random( pos );
+	float rf = 0;
 	vec3 force = externalForce + attrForce + rf * in_vertexNormal;
 	vec3 acc = externalAcc + force / in_mass;
 
-	out_position = (2-damping) * pos - (1-damping) * old + acc * dt * dt;
-	//out_position = vec3(modelMatrix * vec4(in_position, 1));
+	out_position = (2.0-damping) * pos - (1.0-damping) * old + acc * dt * dt;
+	//out_position = in_position;
 	out_oldPosition = in_position;
 	out_mass = in_mass;
 }

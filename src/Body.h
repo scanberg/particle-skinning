@@ -17,11 +17,10 @@ public:
 
 	struct sVertex
 	{
-		sVertex() : index(glm::uvec4(-1)) {};
 		glm::vec3 	position;
 		glm::vec3 	normal;
 		glm::vec2 	texCoord;
-		glm::ivec4 	index;
+		glm::uvec4 	index;
 		glm::vec4 	weight;
 	};
 

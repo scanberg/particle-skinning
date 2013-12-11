@@ -161,11 +161,11 @@ Body::Body(const char * meshfile)
 				for(unsigned int l=0; l<4; ++l) {
 					sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
 
-					if (l == 3 && v.index[l] != -1)
+					if (l == 3 && v.weight[l] != 0.0f)
 						printf("Warning: loosing vertex weight in vertex[%i] \n", vertexOffset+vw.mVertexId);
 
 					// If we find a free slot, (-1)
-					if(v.index[l] == -1) {
+					if(v.weight[l] == 0.0f) {
 						v.index[l]  = index;
 						v.weight[l] = vw.mWeight;
 						vertexWeightCounter++;

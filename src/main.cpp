@@ -62,6 +62,8 @@ int main()
     model.setScale(glm::vec3(0.07));
     model.setPosition(glm::vec3(0,0,0));
 
+	model.resetParticlePositions();
+
     // queries for accurate profiling of opengl calls.
     unsigned int queryID[TIMESTAMPS];
     glGenQueries(TIMESTAMPS, queryID);
@@ -98,8 +100,10 @@ int main()
 
         basicShader.bind();
 
+		glm::mat4 MV = camera.getViewMatrix() * model.getTransform().getMat4();
+
         loc = basicShader.getUniformLocation("viewMatrix");
-        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getViewMatrix()));
+        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(MV));
 
         loc = basicShader.getUniformLocation("projMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
@@ -193,7 +197,7 @@ void setWindowTitle(unsigned int * queryID, double dt)
         double render   = (timeStamp[2] - timeStamp[1]) / 1000000.0;
 
         char title[256];
-        sprintf(title, "FPS %i, time (ms): physics %.5f, rander %.5f", (int)(f / t), physics, render);
+        sprintf(title, "FPS %i, time (ms): physics %.5f, render %.5f", (int)(f / t), physics, render);
         glfwSetWindowTitle(g_window, title);
 
         t = 0.0;

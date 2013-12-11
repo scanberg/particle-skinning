@@ -11,6 +11,8 @@ public:
 	GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader);
 	~GPUParticleSystem();
 
+	void setData(sParticle * particleData, unsigned int particleCount);
+
 	void setStaticAcceleration(const glm::vec3 &acc);
 	void setStaticForce(const glm::vec3 &force);
 
@@ -32,7 +34,6 @@ public:
 
 	unsigned int 	getParticleCount() { return m_particleCount; }
 private:
-	void initData(sParticle * particleData, unsigned int particleCount);
 	void swapTarget(){ m_target = !m_target; }
 
 	glm::vec3	m_staticAcceleration;

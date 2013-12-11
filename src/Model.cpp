@@ -70,7 +70,6 @@ void Model::calculateAndSetBoneMatrices(int uniformLocation)
 		return;
 
 	const size_t max_bones = 128;
-	glm::mat4 localMat[max_bones];
 	glm::mat4 finalMat[max_bones];
 	// 16K on the stack thanks to this, perhaps allocate in heap?
 	// The idéa is to make sure it is coherent in memory.
@@ -78,8 +77,22 @@ void Model::calculateAndSetBoneMatrices(int uniformLocation)
 	size_t boneCount = m_body->getBoneCount();
 	assert(boneCount < max_bones);
 
+	calculateFinalBoneMatrices(finalMat, boneCount);
+
+	glUniformMatrix4fv(uniformLocation, (GLsizei)boneCount, GL_FALSE, glm::value_ptr(finalMat[0]));
+}
+
+// Assumes that the boneMatrices have atleast m_body->getBoneCount() matrices!
+void Model::calculateFinalBoneMatrices(glm::mat4* boneMatrices, size_t boneCount)
+{
+	assert(boneMatrices);
+
+	const size_t max_bones = 128;
+	glm::mat4 localMat[max_bones];
+
 	const std::vector<int>& boneParent = m_body->getBoneParents();
 	const std::vector<Transform>& boneOffset = m_body->getBoneOffsets();
+
 	// Update Local poses
 	for (size_t i = 0; i < boneCount; ++i)
 		localMat[i] = m_currentAnim->getPoseAtTime(i, m_animTime).getMat4();
@@ -87,20 +100,18 @@ void Model::calculateAndSetBoneMatrices(int uniformLocation)
 	// Calculate Final poses
 	for (size_t i = 0; i < boneCount; ++i)
 	{
-		finalMat[i] = localMat[i];
+		boneMatrices[i] = localMat[i];
 		int parent = boneParent[i];
 
 		// Append parents matrix until the bone has no parent (-1)
 		while (parent != -1)
 		{
-			finalMat[i] = localMat[parent] * finalMat[i];
+			boneMatrices[i] = localMat[parent] * boneMatrices[i];
 			parent = boneParent[parent];
 		}
 
-		finalMat[i] = finalMat[i] * boneOffset[i].getMat4();
+		boneMatrices[i] = boneMatrices[i] * boneOffset[i].getMat4();
 	}
-
-	glUniformMatrix4fv(uniformLocation, (GLsizei)boneCount, GL_FALSE, glm::value_ptr(finalMat[0]));
 }
 
 void Model::update(float dt)

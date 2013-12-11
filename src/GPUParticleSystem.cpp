@@ -12,19 +12,61 @@ GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int part
 	m_time = 0;
 	m_va[0] = m_va[1] = 0;
 	m_vb[0] = m_vb[1] = 0;
-	m_particleCount = particleCount;
 	m_target = 0;
 	m_shader = shader;	
 
 	glGenVertexArrays(2, m_va);
 	glGenBuffers(2, m_vb);
 
-	initData(particleData, particleCount);
+	int positionAttr 	= m_shader->getAttribLocation("in_position");
+	int oldPositionAttr = m_shader->getAttribLocation("in_oldPosition");
+	int massAttr 		= m_shader->getAttribLocation("in_mass");
+
+	const char* pOffset = 0;
+
+	glBindVertexArray(m_va[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vb[0]);
+
+		glEnableVertexAttribArray(positionAttr);
+		glEnableVertexAttribArray(oldPositionAttr);
+		glEnableVertexAttribArray(massAttr);
+
+		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
+		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
+		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
+	glBindVertexArray(0);
+
+	glBindVertexArray(m_va[1]);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vb[1]);
+
+		glEnableVertexAttribArray(positionAttr);
+		glEnableVertexAttribArray(oldPositionAttr);
+		glEnableVertexAttribArray(massAttr);
+
+		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
+		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
+		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
+	glBindVertexArray(0);
+
+	setData(particleData, particleCount);
 }
 
 GPUParticleSystem::~GPUParticleSystem()
 {
 	glDeleteBuffers(2, m_vb);
+}
+
+void GPUParticleSystem::setData(sParticle * particleData, unsigned int particleCount)
+{
+	m_particleCount = particleCount;
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_vb[0]);
+	glBufferData(GL_ARRAY_BUFFER, m_particleCount * sizeof(sParticle), particleData, GL_STREAM_DRAW);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, m_vb[1]);
+	glBufferData(GL_ARRAY_BUFFER, m_particleCount * sizeof(sParticle), particleData, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GPUParticleSystem::addRandomImpulse(float impulse)
@@ -48,7 +90,7 @@ void GPUParticleSystem::update(float dt)
 	glBindVertexArray(m_va[m_target]);
 
 	int loc = m_shader->getUniformLocation("dt");
-	glUniform1f(loc, TARGET_TIME);
+	glUniform1f(loc, dt);
 
 	loc = m_shader->getUniformLocation("randomForce");
 	glUniform1f(loc, m_randomForceAccumulator);
@@ -57,6 +99,7 @@ void GPUParticleSystem::update(float dt)
 
 	m_shader->validate();
 
+	//glBindBuffer(GL_ARRAY_BUFFER, m_vb[m_target]);
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[!m_target]);
 
 	// Perform GPU advection:
@@ -70,39 +113,4 @@ void GPUParticleSystem::update(float dt)
 
 	// Swap the A and B buffers for ping-ponging
 	swapTarget();
-}
-
-void GPUParticleSystem::initData(sParticle * particleData, unsigned int particleCount)
-{
-	char* pOffset = 0;
-
-	int positionAttr 	= m_shader->getAttribLocation("in_position");
-	int oldPositionAttr = m_shader->getAttribLocation("in_oldPosition");
-	int massAttr 		= m_shader->getAttribLocation("in_mass");
-
-	glBindVertexArray(m_va[0]);
-		glBindBuffer(GL_ARRAY_BUFFER, m_vb[0]);
-		glBufferData(GL_ARRAY_BUFFER, m_particleCount * sizeof(sParticle), particleData, GL_STREAM_DRAW);
-
-		glEnableVertexAttribArray(positionAttr);
-		glEnableVertexAttribArray(oldPositionAttr);
-		glEnableVertexAttribArray(massAttr);
-
-		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
-		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
-		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
-	glBindVertexArray(0);
-	
-	glBindVertexArray(m_va[1]);
-		glBindBuffer(GL_ARRAY_BUFFER, m_vb[1]);
-		glBufferData(GL_ARRAY_BUFFER, m_particleCount * sizeof(sParticle), 0, GL_STREAM_DRAW);
-
-		glEnableVertexAttribArray(positionAttr);
-		glEnableVertexAttribArray(oldPositionAttr);
-		glEnableVertexAttribArray(massAttr);
-
-		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
-		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
-		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
-	glBindVertexArray(0);
 }

@@ -11,6 +11,7 @@ public:
 	~ParticleSkinnedModel();
 
 	void addRandomImpulse(float impulse) { m_ps->addRandomImpulse(impulse); }
+	void resetParticlePositions();
 
 	void update(float dt);
 	void draw();

@@ -11,14 +11,11 @@ Model(body, mat, materialCount)
     size_t		particleCount = body->getVertexCount();
     sParticle * particleData = new sParticle[particleCount];
 
-	Transform T;
-	T.setScale(glm::vec3(0.07));
-
     for(size_t i=0; i<particleCount; ++i)
     {
         const Body::sVertex v = body->getVertexData()[i];
         sParticle& p = particleData[i];
-		p.oldPosition = p.position = glm::vec3(T.getMat4() * glm::vec4(v.position, 1));
+		p.oldPosition = p.position = v.position;
 		p.mass = 0.1f;
     }
 
@@ -77,6 +74,42 @@ ParticleSkinnedModel::~ParticleSkinnedModel()
 	delete m_ps;
 }
 
+void ParticleSkinnedModel::resetParticlePositions()
+{
+	const size_t max_bones = 128;
+	glm::mat4 finalMat[max_bones];
+	// 16K on the stack thanks to this, perhaps allocate in heap?
+	// The idéa is to make sure it is coherent in memory.
+
+	size_t boneCount = m_body->getBoneCount();
+	assert(boneCount < max_bones);
+
+	calculateFinalBoneMatrices(finalMat, boneCount);
+
+    size_t		particleCount = m_body->getVertexCount();
+    sParticle * particleData = new sParticle[particleCount];
+
+    for(size_t i=0; i<particleCount; ++i)
+    {
+        const Body::sVertex v = m_body->getVertexData()[i];
+		sParticle& p = particleData[i];
+
+		glm::vec4 finalPos;
+		finalPos += finalMat[v.index[0]] * glm::vec4(v.position, 1) * v.weight[0];
+		finalPos += finalMat[v.index[1]] * glm::vec4(v.position, 1) * v.weight[1];
+		finalPos += finalMat[v.index[2]] * glm::vec4(v.position, 1) * v.weight[2];
+		finalPos += finalMat[v.index[3]] * glm::vec4(v.position, 1) * v.weight[3];
+
+		//finalPos = getTransform().getMat4() * finalPos;
+        
+		p.oldPosition = p.position = glm::vec3(finalPos);
+		p.mass = 0.1f;
+    }
+
+	m_ps->setData(particleData, particleCount);
+	delete[] particleData;
+}
+
 void ParticleSkinnedModel::update(float dt)
 {
 	// Send update call to superclass
@@ -85,7 +118,6 @@ void ParticleSkinnedModel::update(float dt)
 	int loc;
 
 	Shader * shader = m_ps->getShader();
-
 	m_ps->getShader()->bind();
 
 	loc = shader->getUniformLocation("modelMatrix");
@@ -99,7 +131,10 @@ void ParticleSkinnedModel::update(float dt)
 
 	//printf("animation time %.2f\n",m_animTime);
 
-	m_ps->update(dt);
+	const int PS_SUB_UPDATE_STEPS = 1;
+	const float TARGET_TIME = (float)(1.0 / (60.0 * PS_SUB_UPDATE_STEPS));
+	for(int i=0; i<PS_SUB_UPDATE_STEPS; ++i)
+		m_ps->update(TARGET_TIME);
 }
 
 void ParticleSkinnedModel::draw()

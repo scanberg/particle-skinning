@@ -39,6 +39,7 @@ public:
 
 protected:
 	void calculateAndSetBoneMatrices(int uniformLocation);
+	void calculateFinalBoneMatrices(glm::mat4* boneMatrices, size_t boneCount);
 
 	// Visuals
 	Body *			m_body;
