@@ -67,10 +67,18 @@ uniform float damping = .05;
 
 void main(void)
 {
-	vec4 targetPosition	=	in_vertexWeight[0] * boneMatrix[in_vertexIndex[0]] * vec4(in_vertexPosition,1);
-	targetPosition		+=	in_vertexWeight[1] * boneMatrix[in_vertexIndex[1]] * vec4(in_vertexPosition,1);
-	targetPosition		+=	in_vertexWeight[2] * boneMatrix[in_vertexIndex[2]] * vec4(in_vertexPosition,1);
-	targetPosition		+=	in_vertexWeight[3] * boneMatrix[in_vertexIndex[3]] * vec4(in_vertexPosition,1);
+	vec4 vertexPos = vec4(in_vertexPosition, 1);
+	vec4 targetPosition = vec4(0);
+
+	for(int i=0; i<4; ++i)
+	{
+		int index = in_vertexIndex[i];
+		if(index == -1)
+			break;
+		float weight = in_vertexWeight[i];
+
+		targetPosition += weight * boneMatrix[index] * vertexPos;
+	}
 
 	//targetPosition = modelMatrix * targetPosition;
 

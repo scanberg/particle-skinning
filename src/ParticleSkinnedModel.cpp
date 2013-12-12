@@ -94,11 +94,14 @@ void ParticleSkinnedModel::resetParticlePositions()
         const Body::sVertex v = m_body->getVertexData()[i];
 		sParticle& p = particleData[i];
 
-		glm::vec4 finalPos;
-		finalPos += finalMat[v.index[0]] * glm::vec4(v.position, 1) * v.weight[0];
-		finalPos += finalMat[v.index[1]] * glm::vec4(v.position, 1) * v.weight[1];
-		finalPos += finalMat[v.index[2]] * glm::vec4(v.position, 1) * v.weight[2];
-		finalPos += finalMat[v.index[3]] * glm::vec4(v.position, 1) * v.weight[3];
+		glm::vec4 finalPos(0.0f);
+		for(size_t u=0; u<4; ++u)
+		{
+			if(v.index[u] == -1)
+				break;
+
+			finalPos += v.weight[u] * finalMat[v.index[u]] * glm::vec4(v.position, 1);
+		}
 
 		//finalPos = getTransform().getMat4() * finalPos;
         

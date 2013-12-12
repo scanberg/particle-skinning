@@ -179,7 +179,8 @@ Body::Body(const char * meshfile)
 				copyAiMatrixToGLM(&bone[j]->mOffsetMatrix, M);
 				m_boneOffset.push_back(Transform(M));
 			}
-			//else
+			else
+				continue;
 			//	printf("Existing bone: '%s'", sh.getStr());
 
 			//printf(", numWeights in bone: %i\n", bone[j]->mNumWeights);
@@ -191,18 +192,16 @@ Body::Body(const char * meshfile)
 				for(unsigned int l=0; l<4; ++l) {
 					sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
 
-					if (l == 3 && v.weight[l] != 0.0f)
-						printf("Warning: loosing vertex weight in vertex[%i] \n", vertexOffset+vw.mVertexId);
+					if (l == 3 && v.index[l] > -1)
+						printf("Warning: losing vertex weight in vertex[%i] \n", vertexOffset+vw.mVertexId);
 
 					// If we find a free slot, (-1)
-					if(v.weight[l] == 0.0f) {
+					if(v.index[l] == -1) {
 						v.index[l]  = index;
 						v.weight[l] = vw.mWeight;
 						vertexWeightCounter++;
 						break;
 					}
-					
-					
 				}
 			}
 		}
