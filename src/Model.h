@@ -25,6 +25,8 @@ public:
 	void pause();
 	void stop();
 
+	bool isPlaying() { return m_animPlaying; }
+
 	void assignMaterialToPart(Material * mat, StringHash part);
 	void assignMaterialToAll(Material * mat);
 	void assignMaterial(const char * filename);

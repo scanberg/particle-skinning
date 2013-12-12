@@ -63,7 +63,7 @@ uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 uniform mat4	boneMatrix[MAX_BONES];
 
-uniform float damping = .25;
+uniform float damping = .05;
 
 void main(void)
 {
@@ -77,12 +77,15 @@ void main(void)
 	// Perhaps implement a static max distance from position to targetposition
 	// if the position is beyond this limit, move the position to the edge of this limit.
 
+	vec2 texCoord 	= in_vertexTexCoord;
+	vec3 normal 	= in_vertexNormal;
+
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
 
 	//vec3 diff = length(target - pos);
-	vec3 attrForce = (target - pos) * 50.1;
+	vec3 attrForce = (target - pos) * 60.0;
 
 	//float rf = randomForce * random( pos );
 	float rf = 0;

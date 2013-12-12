@@ -38,13 +38,27 @@ public:
 		unsigned int count;
 	};
 
+	struct sMaterial
+	{
+		sMaterial(const char * d, const char * n, const char * h, const char * s) :
+		diffuse(d), normal(n), height(h), specular(s) {}
+		StringHash diffuse;
+		StringHash normal;
+		StringHash height;
+		StringHash specular;
+	};
+
 	Body(const char * meshfile);
 	~Body();
+
+	const std::vector<sPart>& getParts() { return m_partData; }
 
 	size_t 			getPartCount() { return m_partData.size(); }
 	sPart * 		getPart(const StringHash & sh);
 	sPart *			getPart(size_t index);
 	int				getPartIndex(const StringHash & sh);
+
+	const std::vector<sMaterial>& getMaterials() { return m_material; }
 
 	/* Bone */
 	const std::vector<Transform>&	getBoneOffsets() { return m_boneOffset; }
@@ -94,6 +108,7 @@ private:
 	// Groups defining parts of the mesh
 	std::vector<StringHash>	m_partSH;
 	std::vector<sPart>		m_partData;
+	std::vector<sMaterial> 	m_material;
 
 	// Bone transformations
 	std::vector<StringHash>	m_boneSH;

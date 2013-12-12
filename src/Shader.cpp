@@ -163,7 +163,7 @@ void Shader::bind()
 {
     if(!m_compiled)
     {
-        printf("shadwer is not compiled \n");
+        printf("shader is not compiled \n");
         return;
     }
 

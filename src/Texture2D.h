@@ -10,6 +10,7 @@
 class Texture2D
 {
 public:
+	Texture2D(const char * TGAfile);
 	Texture2D(GLsizei width, GLsizei height, const GLvoid * data=NULL,
 		GLint internalFormat=GL_RGBA8, GLenum format=GL_RGB,
 		GLenum type=GL_UNSIGNED_BYTE, GLboolean mipmap=GL_FALSE);
@@ -27,6 +28,10 @@ public:
 	void setData(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
 		const GLvoid * data, GLenum format, GLenum type);
 private:
+	void initData(GLsizei width, GLsizei height, const GLvoid * data=NULL,
+		GLint internalFormat=GL_RGBA8, GLenum format=GL_RGB,
+		GLenum type=GL_UNSIGNED_BYTE, GLboolean mipmap=GL_FALSE);
+
 	GLuint	m_textureID;
 	GLsizei m_width, m_height;
 	GLint	m_internalFormat;

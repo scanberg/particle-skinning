@@ -1,5 +1,5 @@
 main 	= main.cpp
-src		= Animation.cpp Body.cpp Camera.cpp crc32.cpp Entity.cpp GPUParticleSystem.cpp Model.cpp ParticleSkinnedModel.cpp Shader.cpp StringHash.cpp Transform.cpp
+src		= Animation.cpp Body.cpp Camera.cpp crc32.cpp Entity.cpp GPUParticleSystem.cpp Model.cpp ParticleSkinnedModel.cpp Shader.cpp StringHash.cpp Texture2D.cpp Transform.cpp
 
 # use some O flag to speed up when shit is working
 cFlags 	= -c -Wall -g -std=c++11

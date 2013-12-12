@@ -76,13 +76,43 @@ Body::Body(const char * meshfile)
 	unsigned int vertexCount = 0;
 	unsigned int triangleCount = 0;
 	unsigned int boneCount = 0;
+	unsigned int materialCount = scene->mNumMaterials;
 
 	unsigned int vertexWeightCounter = 0;
 
+	m_material.reserve(materialCount);
+
+	for(unsigned int i = 0; i < materialCount; ++i)
+	{
+		aiString aiDiff, aiNorm, aiHeig, aiSpec;
+
+		scene->mMaterials[i]->GetTexture (aiTextureType_DIFFUSE, 0, &aiDiff);
+		scene->mMaterials[i]->GetTexture (aiTextureType_NORMALS, 0, &aiNorm);
+		scene->mMaterials[i]->GetTexture (aiTextureType_HEIGHT, 0, &aiHeig);
+		scene->mMaterials[i]->GetTexture (aiTextureType_SPECULAR, 0, &aiSpec);
+
+		std::string diff(aiDiff.C_Str()), norm(aiNorm.C_Str()), heig(aiHeig.C_Str()), spec(aiSpec.C_Str());
+
+		diff = diff.substr(diff.rfind("/")+1);
+		norm = norm.substr(norm.rfind("/")+1);
+		heig = heig.substr(heig.rfind("/")+1);
+		spec = spec.substr(spec.rfind("/")+1);
+
+		m_material.push_back(sMaterial(diff.c_str(), norm.c_str(), heig.c_str(), spec.c_str()));
+
+		/*
+		printf("m_materialSH[%i]: d: %s, n: %s, h:%s, s:%s \n", i,
+			m_material[i].diffuse.getStr(),
+			m_material[i].normal.getStr(),
+			m_material[i].height.getStr(),
+			m_material[i].specular.getStr());
+			*/
+	}
+
 	for (unsigned int i = 0; i<partCount; ++i) {
 		m_partData.push_back(sPart());
-		m_partData[i].offset = vertexCount;
-		m_partData[i].count  = scene->mMeshes[i]->mNumVertices;
+		m_partData[i].offset = triangleCount;
+		m_partData[i].count  = scene->mMeshes[i]->mNumFaces;
 
 		vertexCount    += scene->mMeshes[i]->mNumVertices;
 		triangleCount  += scene->mMeshes[i]->mNumFaces; //maybe
@@ -139,7 +169,7 @@ Body::Body(const char * meshfile)
 			if (index == -1)
 			{
 				// Bone does not exist! create it!
-				printf("New bone: '%s'", sh.getStr());
+				//printf("New bone: '%s'", sh.getStr());
 
 				index = (int)m_boneOffset.size();
 
@@ -149,10 +179,10 @@ Body::Body(const char * meshfile)
 				copyAiMatrixToGLM(&bone[j]->mOffsetMatrix, M);
 				m_boneOffset.push_back(Transform(M));
 			}
-			else
-				printf("Existing bone: '%s'", sh.getStr());
+			//else
+			//	printf("Existing bone: '%s'", sh.getStr());
 
-			printf(", numWeights in bone: %i\n", bone[j]->mNumWeights);
+			//printf(", numWeights in bone: %i\n", bone[j]->mNumWeights);
 
 			for(unsigned int k=0; k<bone[j]->mNumWeights; ++k) {
 				const aiVertexWeight& vw = bone[j]->mWeights[k];
@@ -182,16 +212,14 @@ Body::Body(const char * meshfile)
 		boneOffset     += mesh[i]->mNumBones;
 	}
 
-	printf("Hierarchy: \n");
-	printNode(scene->mRootNode, 0);
+	//printf("Hierarchy: \n");
+	//printNode(scene->mRootNode, 0);
 
 	readBoneHierarchy(scene->mRootNode, -1);
 
 	// print the local version of the hierarchy
-	for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
-	{
-		printf("[%u] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
-	}
+	//for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
+	//	printf("[%u] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
 	
 	unsigned int missingVertexWeights = 0;
 	for (size_t i = 0; i < getVertexCount(); ++i)
@@ -390,11 +418,20 @@ void Body::fillBuffers()
 void Body::draw()
 {
 	glBindVertexArray(m_va);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
    	glDrawElements(GL_TRIANGLES, 3 * getTriangleCount(), GL_UNSIGNED_INT, 0);
    	glBindVertexArray(0);
 }
 
 void Body::drawPart(unsigned int index)
 {
+	GLuint offset 	= m_partData[index].offset * 3;
+	GLsizei count 	= m_partData[index].count * 3;
 
+	const unsigned int * pOffset = 0;
+
+	glBindVertexArray(m_va);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
+   	glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, pOffset + offset);
+	glBindVertexArray(0);
 }

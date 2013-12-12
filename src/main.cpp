@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "GPUParticleSystem.h"
 #include "ParticleSkinnedModel.h"
+#include "Texture2D.h"
 
 #define SUCCESS 1
 #define WIDTH 	1024
@@ -29,14 +30,6 @@ int main()
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
 
-    Shader basicShader;
-    basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
-    basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
-    basicShader.bindAttribLocation(0, "in_position");
-    basicShader.bindFragDataLocation(0, "out_frag0");
-
-    basicShader.link();
-
     Shader particleShader;
     particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
     particleShader.bindAttribLocation(0, "in_position");
@@ -47,19 +40,46 @@ int main()
 
     particleShader.link();
 
-    Body body("data/hellknight/hellknight.md5mesh");
-    body.addAnimation("data/hellknight/idle2.md5anim", "idle");
+    int positionAttr    = particleShader.getAttribLocation("in_position");
+    int normalAttr      = particleShader.getAttribLocation("in_vertexNormal");
+    int texCoordAttr    = particleShader.getAttribLocation("in_vertexTexCoord");
+    int indexAttr       = particleShader.getAttribLocation("in_vertexIndex");
+    int weightAttr      = particleShader.getAttribLocation("in_vertexWeight");
+
+    Shader basicShader;
+    basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
+    basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
+    basicShader.bindAttribLocation(positionAttr,    "in_position");
+    basicShader.bindAttribLocation(normalAttr,      "in_normal");
+    basicShader.bindAttribLocation(texCoordAttr,    "in_texCoord");
+    basicShader.bindFragDataLocation(0, "out_frag0");
+
+    basicShader.link();
+
+    std::string filename = "data/hellknight/hellknight.md5mesh";
+    std::string dir = filename.substr(0,filename.rfind("/")+1);
+    std::string animation = dir + "idle2.md5anim";
+
+    Body body(filename.c_str());
+    body.addAnimation(animation.c_str(), "idle");
+
+    const std::vector<Body::sMaterial>& matfiles = body.getMaterials();
+
+    Texture2D diffuse( (dir + std::string(matfiles[0].diffuse.getStr()) ).c_str() );
+    Texture2D normals("data/fatty/fatty_local.tga");
+    Texture2D height("data/fatty/fatty_h.tga");
+    Texture2D specular("data/fatty/fatty_s.tga");
 
     ParticleSkinnedModel model( &particleShader, &body );
 	model.setAnimation("idle");
-	model.play();
+	model.play(0.2f);
 
 	Camera camera;
 
     camera.setPosition(glm::vec3(0,4,10));
 
     model.rotate(glm::vec3(0,0,0));
-    model.setScale(glm::vec3(0.07));
+    model.setScale(glm::vec3(0.08));
     model.setPosition(glm::vec3(0,0,0));
 
 	model.resetParticlePositions();
@@ -67,6 +87,8 @@ int main()
     // queries for accurate profiling of opengl calls.
     unsigned int queryID[TIMESTAMPS];
     glGenQueries(TIMESTAMPS, queryID);
+
+    glEnable( GL_TEXTURE_2D );
 
     /* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(g_window) &&
@@ -79,8 +101,20 @@ int main()
         static double t = 0;
         t += dt;
 
+        static bool hit = true;
 		if (glfwGetKey(g_window, GLFW_KEY_SPACE))
-            model.addRandomImpulse(5.0f);
+        {
+            if(!hit)
+            {
+                if(model.isPlaying())
+                    model.pause();
+                else
+                    model.play();
+                hit = true;
+            }
+        }
+        else
+            hit = false;
 
 		if (glfwGetKey(g_window, GLFW_KEY_LEFT))
 			model.rotate(glm::vec3(0,-dt*1,0));
@@ -108,7 +142,11 @@ int main()
         loc = basicShader.getUniformLocation("projMatrix");
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(camera.getProjMatrix()));
 
+        loc = basicShader.getUniformLocation("texture0");
+        glUniform1i(loc, 0);
+
         /* Render here */
+        diffuse.bind(0);
         model.draw();
 
         glQueryCounter(queryID[2], GL_TIMESTAMP);

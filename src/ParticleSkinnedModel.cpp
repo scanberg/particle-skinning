@@ -131,7 +131,7 @@ void ParticleSkinnedModel::update(float dt)
 
 	//printf("animation time %.2f\n",m_animTime);
 
-	const int PS_SUB_UPDATE_STEPS = 1;
+	const int PS_SUB_UPDATE_STEPS = 2;
 	const float TARGET_TIME = (float)(1.0 / (60.0 * PS_SUB_UPDATE_STEPS));
 	for(int i=0; i<PS_SUB_UPDATE_STEPS; ++i)
 		m_ps->update(TARGET_TIME);
@@ -139,12 +139,23 @@ void ParticleSkinnedModel::update(float dt)
 
 void ParticleSkinnedModel::draw()
 {
+	const std::vector<Body::sPart>& partData = m_body->getParts();
+
     glBindVertexArray(m_ps->getTargetVA());
     //glBindVertexArray(m_body->getVertexArray());
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->getIndexBuffer());
-    //glDrawElements(GL_TRIANGLES, 3 * b->getTriangleCount(), GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_body->getIndexBuffer());
 
-    glPointSize(2);
-    glDrawArrays(GL_POINTS, 0, m_ps->getParticleCount());
+    for(size_t i=0; i<1; ++i)
+    {
+		GLuint 					offset 	= partData[i].offset * 3;
+		GLsizei 				count 	= partData[i].count * 3;
+		const unsigned int * 	pOffset = 0;
+
+   		//glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, pOffset + offset);
+	}
+
+	glDrawElements(GL_TRIANGLES, 3 * m_body->getTriangleCount(), GL_UNSIGNED_INT, 0);
+    //glPointSize(2);
+    //glDrawArrays(GL_POINTS, 0, m_ps->getParticleCount());
     glBindVertexArray(0);
 }

@@ -61,7 +61,8 @@ void Model::assignMaterial(const char * filename)
 
 void Model::draw()
 {
-	m_body->draw();
+	//m_body->draw();
+	//m_body->drawPart(0);
 }
 
 void Model::calculateAndSetBoneMatrices(int uniformLocation)
