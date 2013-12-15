@@ -117,7 +117,6 @@ Texture2D::Texture2D(const char * filename)
 			printf("error, bpp not recognized");
 			return;
 	}
-	int channels = tga.bitCount / 8;
 
 	initData(tga.imageWidth, tga.imageHeight, tga.imageData, internalFormat, format, GL_UNSIGNED_BYTE, GL_TRUE);
 }
@@ -199,6 +198,9 @@ void Texture2D::initData(GLsizei width, GLsizei height, const GLvoid * data,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	m_format = format;
+	m_internalFormat = internalFormat;
+	m_type = type;
 	m_width = width;
 	m_height = height;
 }

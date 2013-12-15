@@ -113,8 +113,6 @@ Body::Body(const char * meshfile)
 	unsigned int boneCount = 0;
 	unsigned int materialCount = scene->mNumMaterials;
 
-	unsigned int vertexWeightCounter = 0;
-
 	m_material.reserve(materialCount);
 
 	for(unsigned int i = 0; i < materialCount; ++i)
@@ -232,12 +230,6 @@ Body::Body(const char * meshfile)
 		triangleOffset += mesh[i]->mNumFaces;
 		boneOffset     += mesh[i]->mNumBones;
 	}
-
-	printf("Vertex 984: %.2f %.2f %.2f %.2f\n",
-		m_vertexData[984].weight[0],
-		m_vertexData[984].weight[1],
-		m_vertexData[984].weight[2],
-		m_vertexData[984].weight[3]);
 
 	//printf("Hierarchy: \n");
 	//printNode(scene->mRootNode, 0);
@@ -368,8 +360,8 @@ void Body::addAnimation(const char* animationfile, const char* name)
 
 			for(unsigned int k=0; k<maxKeys; ++k)
 			{
-				float w = (float)k / (float)maxKeys;
-				int lowerFrame, upperFrame;
+				//float w = (float)k / (float)maxKeys;
+				//int lowerFrame, upperFrame;
 
 				const aiVector3D &		aPos = channel->mPositionKeys[k].mValue;
 				const aiQuaternion &	aRot = channel->mRotationKeys[k].mValue;
@@ -377,7 +369,7 @@ void Body::addAnimation(const char* animationfile, const char* name)
 
 				glm::vec3 pos = glm::vec3(aPos.x, aPos.y, aPos.z);
 				glm::quat rot = glm::quat(aRot.w, aRot.x, aRot.y, aRot.z);
-				glm::vec3 scl = glm::vec3(1.0f);
+				glm::vec3 scl = glm::vec3(aScl.x, aScl.y, aScl.z);
 
 				ch.m_pose.push_back(Transform(pos, rot, scl));
 			}

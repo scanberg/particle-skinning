@@ -21,7 +21,7 @@ Model(body, mat, materialCount)
 	for(std::set<Body::sLine>::const_iterator it = uniqueConnections.begin(); it != uniqueConnections.end(); ++it)
 		m_constraints.push_back(*it);
 
-	printf("Unique connections: %i \n", m_constraints.size());
+	printf("Unique connections: %zu \n", m_constraints.size());
 
     size_t particleCount = body->getVertexCount();
 	m_particles.resize(particleCount);
@@ -121,7 +121,6 @@ void ParticleSkinnedModel::update(float dt)
 	Model::update(dt);
 
 	const int PS_SUB_UPDATE_STEPS = 1;
-	const int CONSTRAINT_SUB_UPDATE_STEPS = 2;
 
 	const float TARGET_TIME = (float)(1.0 / (60.0 * PS_SUB_UPDATE_STEPS));
 
@@ -202,8 +201,8 @@ void ParticleSkinnedModel::update(float dt)
 			//p.position = target;
 		}
 
-		const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
-		const float stiffness = 0.01f;
+		//const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
+		//const float stiffness = 0.01f;
 
 		/*
 		// Update constraints
