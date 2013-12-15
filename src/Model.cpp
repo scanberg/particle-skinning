@@ -10,6 +10,7 @@ m_animTime(0.0f),
 m_currentAnim(NULL)
 {
 	assert(body);
+	m_partMaterial.resize(m_body->getPartCount(), -1);
 }
 
 Model::~Model()
@@ -35,6 +36,11 @@ void Model::setAnimation(size_t index)
 		m_currentAnim = anim;
 }
 
+void Model::play()
+{
+	m_animPlaying = true;
+}
+
 void Model::play(float speed, int iterations)
 {
 	m_animSpeed = speed;
@@ -52,17 +58,14 @@ void Model::stop()
 	m_animTime = 0.0f;
 }
 
-void Model::assignMaterialToPart(Material * mat, StringHash part){}
-void Model::assignMaterialToAll(Material * mat){}
-void Model::assignMaterial(const char * filename)
+void Model::draw()
 {
 
 }
 
-void Model::draw()
+void Model::drawPart(size_t index)
 {
-	//m_body->draw();
-	//m_body->drawPart(0);
+
 }
 
 void Model::calculateAndSetBoneMatrices(int uniformLocation)

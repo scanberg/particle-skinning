@@ -91,22 +91,27 @@ Texture2D::Texture2D(const char * filename)
 		return;
 	}
 
-	printf("%s was successfully loaded, w: %i, h: %i, bpp: %i \n", filename, tga.imageWidth, tga.imageHeight, tga.bitCount);
+	printf("Loaded: '%s', w: %i, h: %i, bpp: %i \n", filename, tga.imageWidth, tga.imageHeight, tga.bitCount);
 
 	GLint format;
+	GLint internalFormat;
 	switch(tga.bitCount)
 	{
 		case(8):
 			format = GL_RED;
+			internalFormat = GL_R8;
 			break;
 		case(16):
 			format = GL_RG;
+			internalFormat = GL_RG8;
 			break;
 		case(24):
 			format = GL_RGB;
+			internalFormat = GL_RGB8;
 			break;
 		case(32):
 			format = GL_RGBA;
+			internalFormat = GL_RGBA8;
 			break;
 		default:
 			printf("error, bpp not recognized");
@@ -114,12 +119,7 @@ Texture2D::Texture2D(const char * filename)
 	}
 	int channels = tga.bitCount / 8;
 
-	printf("data is %i %i %i \n",
-		tga.imageData[(tga.imageWidth*100+100)*channels+0],
-		tga.imageData[(tga.imageWidth*100+100)*channels+1],
-		tga.imageData[(tga.imageWidth*100+100)*channels+2]);
-
-	initData(tga.imageWidth, tga.imageHeight, tga.imageData, format, format, GL_UNSIGNED_BYTE, GL_TRUE);
+	initData(tga.imageWidth, tga.imageHeight, tga.imageData, internalFormat, format, GL_UNSIGNED_BYTE, GL_TRUE);
 }
 
 Texture2D::Texture2D(GLsizei width, GLsizei height, const GLvoid * data,
@@ -151,7 +151,7 @@ GLsizei Texture2D::getHeight() const
 
 void Texture2D::bind(GLuint channel) const
 {
-	glActiveTexture(channel);
+	glActiveTexture(GL_TEXTURE0 + channel);
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
 }
 

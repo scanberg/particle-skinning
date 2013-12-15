@@ -3,6 +3,7 @@
 #include "Body.h"
 #include "Material.h"
 #include "Entity.h"
+#include "GL.h"
 
 /*
  *	Model
@@ -20,7 +21,8 @@ public:
 	void setAnimation(const char * animationName);
 	void setAnimation(size_t index);
 
-	void play(float speed = 1.0f, int iterations = 0);
+	void play();
+	void play(float speed, int iterations = 0);
 
 	void pause();
 	void stop();
@@ -28,24 +30,37 @@ public:
 	bool isPlaying() { return m_animPlaying; }
 
 	void assignMaterialToPart(Material * mat, StringHash part);
+	void assignMaterialToPart(Material * mat, size_t index);
 	void assignMaterialToAll(Material * mat);
-	void assignMaterial(const char * filename);
-
-	void draw();
 
 	virtual void update(float dt);
 
-	Body * 							getBody() { return m_body; }
-	const std::vector<Material*>&	getMaterial() { return m_material; }
-	size_t 							getMaterialCount() { return m_material.size(); }
+	virtual void draw();
+	virtual void drawPart(size_t index);
+
+	Body* getBody() { return m_body; }
+
+/*
+	Material*						getMaterial(size_t i) { return material[i]; }
+	const std::vector<Material*>&	getMaterials() { return m_partMaterial; }
+	size_t 							getMaterialCount() { return m_partMaterial.size(); }
+*/
 
 protected:
 	void calculateAndSetBoneMatrices(int uniformLocation);
 	void calculateFinalBoneMatrices(glm::mat4* boneMatrices, size_t boneCount);
 
-	// Visuals
-	Body *			m_body;
-	std::vector<Material*>	m_material;
+	// Body of the model
+	Body *						m_body;
+
+	// materials used, and a vertex array for that setup
+	std::vector<Material*>		m_material;
+
+	// Vertex array
+	VertexArray					m_vertexArray;
+
+	// part - material mapping
+	std::vector<int>			m_partMaterial;
 
 	// Animation
 	bool			m_animPlaying;

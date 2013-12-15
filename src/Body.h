@@ -1,10 +1,13 @@
 #pragma once
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <assimp/scene.h>
 #include "Animation.h"
 #include "StringHash.h"
+
+#define MAX_WEIGHTS 4
 
 /*	Body class
  *	Should be considered as a shared resource
@@ -15,19 +18,56 @@ class Body
 {
 public:
 
+	class VertexWeight
+	{
+	public:
+		static GLenum	getGLType() { return GL_FLOAT; }
+
+		VertexWeight() : data(0.0f) {}
+		void	setIndex(int index) { data = index + glm::fract(data); }
+		void	setWeight(float weight) { data = (int)data + weight * 0.99f; }
+		void	set(int index, float weight) { data = index + weight * 0.99f; }
+
+		float	getWeight() const { return glm::fract(data)/0.99f; }
+		int		getIndex() const { return (int)data; }
+		bool	unused() const { return data == 0.0f; }
+	private:
+		float data;
+	};
+
 	struct sVertex
 	{
-		sVertex() : index(glm::ivec4(-1)), weight(glm::vec4(0.0f)) {}
-		glm::vec3 	position;
-		glm::vec3 	normal;
-		glm::vec2 	texCoord;
-		glm::uvec4 	index;
-		glm::vec4 	weight;
+		glm::vec3 		position;
+		glm::vec3 		normal;
+		glm::vec2 		texCoord;
+		VertexWeight	weight[MAX_WEIGHTS];
+	};
+
+	struct sLine
+	{
+		sLine();
+		sLine(unsigned int indexA, unsigned indexB)
+		{
+			if(indexA < indexB)
+			{
+				index[0] = indexA;
+				index[1] = indexB;
+			}
+			else
+			{
+				index[0] = indexB;
+				index[1] = indexA;
+			}
+		}
+
+		bool operator<(const sLine& rhs) const { return index[0] < rhs.index[0]; }
+
+		unsigned int index[2];
 	};
 
 	struct sTriangle
 	{
-		sTriangle() : index() {}
+		sTriangle() { index[0] = index[1] = index[2] = 0; }
 		unsigned int index[3];
 	};
 
@@ -79,26 +119,22 @@ public:
 	int				getAnimationIndex(const StringHash & sh);
 
 	/* Geometry */
-	sVertex *		getVertexData() { return &m_vertexData[0]; }
-	size_t 			getVertexCount() { return m_vertexData.size(); }
+	const std::vector<sVertex>& 	getVertexData() { return m_vertexData; }
+	size_t 							getVertexCount() { return m_vertexData.size(); }
 
-	sTriangle * 	getTriangleData() { return &m_triangleData[0]; }
-	size_t			getTriangleCount() { return m_triangleData.size(); }
+	const std::vector<sTriangle>& 	getTriangleData() { return m_triangleData; }
+	size_t							getTriangleCount() { return m_triangleData.size(); }
 
-	unsigned int 	getVertexArray() { return m_va; }
 	unsigned int 	getVertexBuffer() { return m_vb; }
 	unsigned int	getIndexBuffer() { return m_ib; }
 
 	void 			addAnimation(const char * animationfile, const char * name);
-	void			draw();
-	void 			drawPart(unsigned int index);
 	
 private:
 	void readBoneHierarchy(aiNode * node, int parent);
 	void fillBuffers();
 
 	// GL buffers
-	unsigned int 	m_va;
 	unsigned int 	m_vb;
 	unsigned int 	m_ib;
 

@@ -1,41 +1,63 @@
+#include <glm/gtc/type_ptr.hpp>
 #include "Material.h"
 
-Material::Material(const char* imfile)
+const char * textureUniformDefaults[] = {
+	"texture_diffuse",
+	"texture_normal",
+	"texture_height",
+	"texture_smoothness"};
+
+const char * attributeUniformDefaults[] = {
+	"material_diffuse",
+	"material_height",
+	"material_metallic",
+	"material_smoothness"};
+
+Material::Material(Shader& shader) :
+m_shader(shader)
 {
-	/*
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(imfile);
-	FIBITMAP* img = FreeImage_Load(format, imfile);
-	unsigned int height, width;
-	height = FreeImage_GetHeight(img);
-	width  = FreeImage_GetWidth(img);
+	for(int i=0; i<TEX_COUNT; ++i)
+	{
+		m_texture[i] = nullptr;
+		m_texLocation[i] = m_shader.getUniformLocation(textureUniformDefaults[i]);
+	}
 
-	mDiffuse = (char*)FreeImage_GetBits(img);
-	subscribers = 1;
+	m_attribute[ATTR_DIFFUSE]		= glm::vec3(1);
+	m_attribute[ATTR_HEIGHT]		= glm::vec3(0.03);
+	m_attribute[ATTR_METALLIC]		= glm::vec3(0);
+	m_attribute[ATTR_SMOOTHNESS]	= glm::vec3(0);
 
-	*/
-
-	//printf("Antal %i \n", (int) scene->mMaterials[0]->GetTextureCount(aiTextureType_DIFFUSE));
-	//aiString tgafile;
-	//scene->mMaterials[0]->GetTexture(aiTextureType_DIFFUSE, 0, &tgafile);
-	//printf("Texture path: %s \n", tgafile.C_Str());
-}
-Material::~Material()
-{
-	if (subscribers == 1 && mDiffuse != NULL)
-		delete[] mDiffuse;
-	else
-		subscribers -= 1;
-}
-
-char*& Material::subscribe()
-{
-	subscribers += 1;
-	return mDiffuse;
+	for(int i=0; i<ATTR_COUNT; ++i)
+		m_attrLocation[i] = m_shader.getUniformLocation(attributeUniformDefaults[i]);
 }
 
-void Material::unsubscribe()
+void Material::bind()
 {
-	subscribers -= 1;
-	if (subscribers == 0)
-		delete this;
+	m_shader.bind();
+
+	for(int i=0; i<TEX_COUNT; ++i)
+	{
+		if( hasTexture(static_cast<TYPE_TEXTURE>(i)) )
+		{
+			glUniform1i(m_texLocation[i], i);
+			m_texture[i]->bind(i);
+		}
+	}
+
+	for(int i=0; i<ATTR_COUNT; ++i)
+	{
+		switch(i)
+		{
+		case ATTR_DIFFUSE:
+			glUniform3fv(m_attrLocation[i], 1, glm::value_ptr(m_attribute[i]));
+			break;
+		case ATTR_HEIGHT:
+		case ATTR_SMOOTHNESS:
+		case ATTR_METALLIC:
+			glUniform1f(m_attrLocation[i], m_attribute[i][0]);
+			break;
+		default:
+			break;
+		}
+	}
 }

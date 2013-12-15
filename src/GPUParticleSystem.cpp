@@ -4,23 +4,22 @@
 
 const float TARGET_TIME = (float)(1.0 / 60.0);
 
-GPUParticleSystem::GPUParticleSystem(sParticle * particleData, unsigned int particleCount, Shader * shader)
+GPUParticleSystem::GPUParticleSystem(sParticle * particleData, size_t particleCount, Shader &shader) :
+m_shader(shader)
 {
-	assert(shader);
 	assert(particleData);
 
 	m_time = 0;
 	m_va[0] = m_va[1] = 0;
 	m_vb[0] = m_vb[1] = 0;
 	m_target = 0;
-	m_shader = shader;	
 
 	glGenVertexArrays(2, m_va);
 	glGenBuffers(2, m_vb);
 
-	int positionAttr 	= m_shader->getAttribLocation("in_position");
-	int oldPositionAttr = m_shader->getAttribLocation("in_oldPosition");
-	int massAttr 		= m_shader->getAttribLocation("in_mass");
+	int positionAttr 	= m_shader.getAttribLocation("in_position");
+	int oldPositionAttr = m_shader.getAttribLocation("in_oldPosition");
+	int massAttr 		= m_shader.getAttribLocation("in_mass");
 
 	const char* pOffset = 0;
 
@@ -56,7 +55,7 @@ GPUParticleSystem::~GPUParticleSystem()
 	glDeleteBuffers(2, m_vb);
 }
 
-void GPUParticleSystem::setData(sParticle * particleData, unsigned int particleCount)
+void GPUParticleSystem::setData(sParticle * particleData, size_t particleCount)
 {
 	m_particleCount = particleCount;
 
@@ -69,11 +68,6 @@ void GPUParticleSystem::setData(sParticle * particleData, unsigned int particleC
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void GPUParticleSystem::addRandomImpulse(float impulse)
-{
-	m_randomForceAccumulator += impulse / TARGET_TIME;
-}
-
 void GPUParticleSystem::update(float dt)
 {
 	m_time += dt;
@@ -83,28 +77,22 @@ void GPUParticleSystem::update(float dt)
 
 	m_time = 0;
 
-	m_shader->bind();
+	m_shader.bind();
 
 	glEnable(GL_RASTERIZER_DISCARD);
 
-	glBindVertexArray(m_va[m_target]);
+	glBindVertexArray(getSourceVA());
 
-	int loc = m_shader->getUniformLocation("dt");
+	int loc = m_shader.getUniformLocation("dt");
 	glUniform1f(loc, dt);
 
-	loc = m_shader->getUniformLocation("randomForce");
-	glUniform1f(loc, m_randomForceAccumulator);
+	m_shader.validate();
 
-	m_randomForceAccumulator = 0.0f;
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, getTargetVB());
 
-	m_shader->validate();
-
-	//glBindBuffer(GL_ARRAY_BUFFER, m_vb[m_target]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vb[!m_target]);
-
-	// Perform GPU advection:
+	// Perform GPU simulation:
 	glBeginTransformFeedback(GL_POINTS);
-	glDrawArrays(GL_POINTS, 0, m_particleCount);
+	glDrawArrays(GL_POINTS, 0, (GLsizei)m_particleCount);
 	glEndTransformFeedback();
 
 	glBindVertexArray(0);

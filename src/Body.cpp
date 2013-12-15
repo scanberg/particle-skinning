@@ -1,6 +1,5 @@
 #include "Body.h"
 
-#include <GL/glew.h>
 #include <assimp/cimport.h>        // Plain-C interface
 #include <assimp/scene.h>          // Output data structure
 #include <assimp/postprocess.h>    // Post processing flags
@@ -44,15 +43,51 @@ void printNode(aiNode* node, size_t level)
 		printNode(node->mChildren[i], level+1);
 }
 
+void insertWeight(Body::sVertex & v, unsigned int index, float weight)
+{
+	for(int i=0; i<MAX_WEIGHTS; ++i)
+	{
+		if(v.weight[i].unused()) {
+			v.weight[i].set(index, weight);
+			return;
+		}
+	}
+
+	// If we end up here, we're in trouble, no more slots for the weight
+	// Strategy: kick out the least important one and renormalize weights
+	int		leastI = -1;
+	float	leastW = weight;
+
+	for(int i=0; i<MAX_WEIGHTS; ++i)
+	{
+		float w = v.weight[i].getWeight();
+		if(w < leastW)
+		{
+			leastI = i;
+			leastW = w;
+		}
+	}
+
+	// If an existing weight was the least
+	if(leastI > -1)
+	{
+		// Swap with the new weight
+		v.weight[leastI].set(index, weight);
+	}
+
+	// Renormalize
+	float totalW = v.weight[0].getWeight() + v.weight[1].getWeight() + v.weight[2].getWeight() + v.weight[3].getWeight();
+	for(int i=0; i<MAX_WEIGHTS; ++i)
+		v.weight[i].setWeight(v.weight[i].getWeight() / totalW);
+}
+
 Body::Body(const char * meshfile)
 {
 	m_vb = 0;
 	m_ib = 0;
-	m_va = 0;
 
 	glGenBuffers(1, &m_vb);
 	glGenBuffers(1, &m_ib);
-    glGenVertexArrays(1, &m_va);
 
 	// Start the import on the given file with some example postprocessing
 	// Usually - if speed is not the most important aspect for you - you'll t
@@ -185,24 +220,11 @@ Body::Body(const char * meshfile)
 
 			//printf(", numWeights in bone: %i\n", bone[j]->mNumWeights);
 
+			// Store vertex weights for this bone
 			for(unsigned int k=0; k<bone[j]->mNumWeights; ++k) {
 				const aiVertexWeight& vw = bone[j]->mWeights[k];
-
-				// Iterate over the weight-indices of this vertex and possibly add a new weight
-				for(unsigned int l=0; l<4; ++l) {
-					sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
-
-					if (l == 3 && v.index[l] > -1)
-						printf("Warning: losing vertex weight in vertex[%i] \n", vertexOffset+vw.mVertexId);
-
-					// If we find a free slot, (-1)
-					if(v.index[l] == -1) {
-						v.index[l]  = index;
-						v.weight[l] = vw.mWeight;
-						vertexWeightCounter++;
-						break;
-					}
-				}
+				sVertex & v = m_vertexData[vertexOffset+vw.mVertexId];
+				insertWeight(v, index, vw.mWeight);
 			}
 		}
 
@@ -210,6 +232,12 @@ Body::Body(const char * meshfile)
 		triangleOffset += mesh[i]->mNumFaces;
 		boneOffset     += mesh[i]->mNumBones;
 	}
+
+	printf("Vertex 984: %.2f %.2f %.2f %.2f\n",
+		m_vertexData[984].weight[0],
+		m_vertexData[984].weight[1],
+		m_vertexData[984].weight[2],
+		m_vertexData[984].weight[3]);
 
 	//printf("Hierarchy: \n");
 	//printNode(scene->mRootNode, 0);
@@ -219,22 +247,6 @@ Body::Body(const char * meshfile)
 	// print the local version of the hierarchy
 	//for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
 	//	printf("[%u] %s : parent %i \n", i, m_boneSH[i].getStr(), m_boneParent[i]);
-	
-	unsigned int missingVertexWeights = 0;
-	for (size_t i = 0; i < getVertexCount(); ++i)
-	{
-		/*
-		printf("[%i] Vertex Weight: [%i, %.1f] [%i, %.1f] [%i, %.1f] [%i, %.1f]\n", i,
-			m_vertexData[i].index[0], m_vertexData[i].weight[0],
-			m_vertexData[i].index[1], m_vertexData[i].weight[1],
-			m_vertexData[i].index[2], m_vertexData[i].weight[2], 
-			m_vertexData[i].index[3], m_vertexData[i].weight[3] );
-		*/
-		if (m_vertexData[i].index[0] == -1)
-			missingVertexWeights++;
-	}
-	printf("Amount of vertex weights: %i \n", vertexWeightCounter);
-	printf("Amount of vertices missing weights: %i \n", missingVertexWeights);
 	
 	// If we have an animation named as the meshfile.md5anim
 	addAnimation(meshfile, "default");
@@ -248,7 +260,6 @@ Body::~Body()
 {
 	glDeleteBuffers(1, &m_vb);
 	glDeleteBuffers(1, &m_ib);
-	glDeleteVertexArrays(1, &m_va);
 }
 
 Body::sPart * Body::getPart(const StringHash & sh)
@@ -339,7 +350,7 @@ void Body::addAnimation(const char* animationfile, const char* name)
 		printf("New animation: '%s', channels: %i, duration %.2f, tps: %.2f\n", name, numChannels, duration, ticksPerSecond);
 
 		m_animationSH.push_back(StringHash(name));
-		m_animationData.push_back(Animation(numChannels, duration/ticksPerSecond, ticksPerSecond));
+		m_animationData.push_back(Animation(numChannels, (float) (duration/ticksPerSecond), (float)ticksPerSecond));
 
 		Animation & anim = m_animationData[i];
 
@@ -396,41 +407,9 @@ void Body::readBoneHierarchy(aiNode* node, int parent)
 
 void Body::fillBuffers()
 {
-    glBindVertexArray(m_va);
-    
 	glBindBuffer(GL_ARRAY_BUFFER, m_vb);
-	glBufferData(GL_ARRAY_BUFFER, getVertexCount() * sizeof(sVertex), getVertexData(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, getVertexCount() * sizeof(sVertex), &getVertexData()[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, getTriangleCount() * sizeof(sTriangle), getTriangleData(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Body::sVertex), (const GLvoid*)0);
-
-	glBindVertexArray(0);
-}
-
-void Body::draw()
-{
-	glBindVertexArray(m_va);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
-   	glDrawElements(GL_TRIANGLES, 3 * getTriangleCount(), GL_UNSIGNED_INT, 0);
-   	glBindVertexArray(0);
-}
-
-void Body::drawPart(unsigned int index)
-{
-	GLuint offset 	= m_partData[index].offset * 3;
-	GLsizei count 	= m_partData[index].count * 3;
-
-	const unsigned int * pOffset = 0;
-
-	glBindVertexArray(m_va);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
-   	glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, pOffset + offset);
-	glBindVertexArray(0);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, getTriangleCount() * sizeof(sTriangle), &getTriangleData()[0], GL_STATIC_DRAW);
 }

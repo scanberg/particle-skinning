@@ -2,7 +2,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-Shader * Shader::s_boundShader = NULL;
+Shader* Shader::s_boundShader = NULL;
+
+char* readTextFile(const char *filename);
+void printShaderInfoLog(GLuint obj);
+void printProgramInfoLog(GLuint obj);
 
 /**
  * readTextFile - reads a simple textfile specified by filename,
@@ -177,12 +181,12 @@ void Shader::unbind()
 	s_boundShader = NULL;
 }
 
-int Shader::getUniformLocation(const char * uniform)
+int Shader::getUniformLocation(const char * uniform) const
 {
     return glGetUniformLocation(m_program, uniform);
 }
 
-int Shader::getAttribLocation(const char * attrib)
+int Shader::getAttribLocation(const char * attrib) const
 {
     return glGetAttribLocation(m_program, attrib);
 }

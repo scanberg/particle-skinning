@@ -19,11 +19,12 @@
 
 int initGL(int width, int height);
 void initGeom(unsigned int &vao, unsigned int &vbo);
-void setWindowTitle(unsigned int * queryID, double dt);
+void setWindowTitle(double dt);
 
 double calcDT();
 
-GLFWwindow * g_window;
+GLFWwindow *	g_window;
+GLuint			g_queryID[TIMESTAMPS];
 
 int main()
 {
@@ -32,28 +33,21 @@ int main()
 
     Shader particleShader;
     particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
-    particleShader.bindAttribLocation(0, "in_position");
-    particleShader.bindAttribLocation(1, "in_oldPosition");
-    particleShader.bindAttribLocation(2, "in_mass");
-    const char* varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
-    glTransformFeedbackVaryings(particleShader.getProgram(), 3, varyings, GL_INTERLEAVED_ATTRIBS);
-
+    const char* ps_varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
+    glTransformFeedbackVaryings(particleShader.getProgram(), 3, ps_varyings, GL_INTERLEAVED_ATTRIBS);
     particleShader.link();
 
-    int positionAttr    = particleShader.getAttribLocation("in_position");
-    int normalAttr      = particleShader.getAttribLocation("in_vertexNormal");
-    int texCoordAttr    = particleShader.getAttribLocation("in_vertexTexCoord");
-    int indexAttr       = particleShader.getAttribLocation("in_vertexIndex");
-    int weightAttr      = particleShader.getAttribLocation("in_vertexWeight");
+	Shader advectionShader;
+	advectionShader.attachShader(GL_VERTEX_SHADER, "data/shaders/advec.vert");
+	advectionShader.attachShader(GL_GEOMETRY_SHADER, "data/shaders/advec.geom");
+	const char* as_varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
+	glTransformFeedbackVaryings(advectionShader.getProgram(), 3, as_varyings, GL_INTERLEAVED_ATTRIBS);
+	advectionShader.link();
 
     Shader basicShader;
     basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
     basicShader.attachShader(GL_FRAGMENT_SHADER, "data/shaders/basic.frag");
-    basicShader.bindAttribLocation(positionAttr,    "in_position");
-    basicShader.bindAttribLocation(normalAttr,      "in_normal");
-    basicShader.bindAttribLocation(texCoordAttr,    "in_texCoord");
     basicShader.bindFragDataLocation(0, "out_frag0");
-
     basicShader.link();
 
     std::string filename = "data/hellknight/hellknight.md5mesh";
@@ -66,13 +60,20 @@ int main()
     const std::vector<Body::sMaterial>& matfiles = body.getMaterials();
 
     Texture2D diffuse( (dir + std::string(matfiles[0].diffuse.getStr()) ).c_str() );
-    Texture2D normals("data/fatty/fatty_local.tga");
-    Texture2D height("data/fatty/fatty_h.tga");
-    Texture2D specular("data/fatty/fatty_s.tga");
+    Texture2D normals( (dir + std::string(matfiles[0].normal.getStr()) ).c_str() );
+    Texture2D height( (dir + std::string(matfiles[0].height.getStr()) ).c_str() );
+    Texture2D specular( (dir + std::string(matfiles[0].specular.getStr()) ).c_str() );
 
-    ParticleSkinnedModel model( &particleShader, &body );
+	Material material(basicShader);
+	material.setTexture(Material::TEX_DIFFUSE, &diffuse);
+	material.setTexture(Material::TEX_NORMAL, &normals);
+	material.setTexture(Material::TEX_HEIGHT, &height);
+	material.setTexture(Material::TEX_SMOOTHNESS, &specular);
+
+    ParticleSkinnedModel model( particleShader, &body );
 	model.setAnimation("idle");
-	model.play(0.2f);
+	model.play(1.0f);
+	model.simulateOnGPU(false);
 
 	Camera camera;
 
@@ -85,8 +86,8 @@ int main()
 	model.resetParticlePositions();
 
     // queries for accurate profiling of opengl calls.
-    unsigned int queryID[TIMESTAMPS];
-    glGenQueries(TIMESTAMPS, queryID);
+    
+    glGenQueries(TIMESTAMPS, g_queryID);
 
     glEnable( GL_TEXTURE_2D );
 
@@ -116,15 +117,21 @@ int main()
         else
             hit = false;
 
+		if(glfwGetKey(g_window, GLFW_KEY_1))
+			model.simulateOnGPU(true);
+
+		if(glfwGetKey(g_window, GLFW_KEY_2))
+			model.simulateOnGPU(false);
+
 		if (glfwGetKey(g_window, GLFW_KEY_LEFT))
 			model.rotate(glm::vec3(0,-dt*1,0));
 
 		if (glfwGetKey(g_window, GLFW_KEY_RIGHT))
 			model.rotate(glm::vec3(0,dt*1,0));
 
-        glQueryCounter(queryID[0], GL_TIMESTAMP);
+        glQueryCounter(g_queryID[0], GL_TIMESTAMP);
         model.update((float)dt);
-        glQueryCounter(queryID[1], GL_TIMESTAMP);
+        glQueryCounter(g_queryID[1], GL_TIMESTAMP);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, WIDTH, HEIGHT);
@@ -145,16 +152,16 @@ int main()
         loc = basicShader.getUniformLocation("texture0");
         glUniform1i(loc, 0);
 
+		material.bind();
         /* Render here */
-        diffuse.bind(0);
-        model.draw();
+        model.drawPart(0);
 
-        glQueryCounter(queryID[2], GL_TIMESTAMP);
+        glQueryCounter(g_queryID[2], GL_TIMESTAMP);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
 
-        setWindowTitle(queryID, dt);
+        setWindowTitle(dt);
 
         /* Poll for and process events */
         glfwPollEvents();
@@ -217,7 +224,7 @@ double calcDT()
     return dt;
 }
 
-void setWindowTitle(unsigned int * queryID, double dt)
+void setWindowTitle(double dt)
 {
     static double t = 0.0;
     static unsigned int f = 0;
@@ -229,7 +236,7 @@ void setWindowTitle(unsigned int * queryID, double dt)
         GLuint64 timeStamp[3];
 
         for(int i=0; i<TIMESTAMPS; ++i)
-            glGetQueryObjectui64v(queryID[i], GL_QUERY_RESULT, &timeStamp[i]);
+            glGetQueryObjectui64v(g_queryID[i], GL_QUERY_RESULT, &timeStamp[i]);
 
         double physics  = (timeStamp[1] - timeStamp[0]) / 1000000.0;
         double render   = (timeStamp[2] - timeStamp[1]) / 1000000.0;

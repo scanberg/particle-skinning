@@ -5,7 +5,7 @@
 class Shader
 {
 public:
-	static Shader * getBoundShader() { return s_boundShader; }
+	static Shader* getBoundShader() { return s_boundShader; }
 
 	Shader();
 	~Shader();
@@ -21,10 +21,10 @@ public:
 	void bind();
 	void unbind();
 
-	int getUniformLocation(const char * uniform);
-	int getAttribLocation(const char * attribute);
+	int getUniformLocation(const char * uniform) const;
+	int getAttribLocation(const char * attribute) const;
 
-	GLuint getProgram() { return m_program; }
+	GLuint getProgram() const { return m_program; }
 
 private:
 	static Shader * s_boundShader;

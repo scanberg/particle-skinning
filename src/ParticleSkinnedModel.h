@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "GPUParticleSystem.h"
 #include "Model.h"
 #include "Shader.h"
@@ -7,17 +9,23 @@
 class ParticleSkinnedModel : public Model
 {
 public:
-	ParticleSkinnedModel(Shader * particleShader, Body * body, Material ** mat = NULL, unsigned int materialCount = 0);
+	ParticleSkinnedModel(Shader & particleShader, Body * body, Material ** mat = NULL, unsigned int materialCount = 0);
 	~ParticleSkinnedModel();
 
-	void addRandomImpulse(float impulse) { m_ps->addRandomImpulse(impulse); }
 	void resetParticlePositions();
 
 	void update(float dt);
-	void draw();
+	virtual void draw();
+	virtual void drawPart(size_t index);
+
+	void simulateOnGPU(bool val) { m_simulateOnGPU = val; resetParticlePositions(); }
 
 protected:
-
 	// Pointer, to enable initialization in constructor rather than in the initializer list.
-	GPUParticleSystem* m_ps;
+	GPUParticleSystem*	m_ps;
+	bool				m_simulateOnGPU;
+
+	VertexBuffer					m_particleBuffer;
+	std::vector<sParticle>			m_particles;
+	std::vector<Body::sLine>		m_constraints;
 };
