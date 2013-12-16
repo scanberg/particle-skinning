@@ -36,7 +36,7 @@ all: $(cBin)
 	./$(cBin)
 
 $(cBin): $(cMain) $(cObj)
-	$(CC) $^ $(ldFlags) -o $@
+	$(CC) -std=c++11 $^ $(ldFlags) -o $@
 
 $(objDir)%.o: $(srcDir)%.cpp $(srcDir)%.h
 	$(CC) $(cFlags) $< -o $@
