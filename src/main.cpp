@@ -52,7 +52,7 @@ int main()
 
     std::string filename = "data/fatty/zfat.md5mesh";
     std::string dir = filename.substr(0,filename.rfind("/")+1);
-    std::string animation = dir + "walk2.md5anim";
+    std::string animation = dir + "attack_leftslap.md5anim";
 
     Body body(filename.c_str());
     body.addAnimation(animation.c_str(), "idle");

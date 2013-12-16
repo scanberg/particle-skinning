@@ -26,13 +26,20 @@ Model(body, mat, materialCount)
     size_t particleCount = body->getVertexCount();
 	m_particles.resize(particleCount);
 
+	glm::vec3 boundingBoxMin(1.0e20f);
+	glm::vec3 boundingBoxMax(-1.0e20f);
     for(size_t i=0; i<particleCount; ++i)
     {
         const Body::sVertex v = body->getVertexData()[i];
         sParticle& p = m_particles[i];
 		p.oldPosition = p.position = v.position;
 		p.mass = getParticleMass(i);
+
+		boundingBoxMin = glm::min(boundingBoxMin, v.position);
+		boundingBoxMax = glm::max(boundingBoxMax, v.position);
     }
+	boundingBoxMin = boundingBoxMax - boundingBoxMin;
+	printf("%f, %f, %f\n", boundingBoxMin.x, boundingBoxMin.y, boundingBoxMin.z);
 
 	m_ps = new GPUParticleSystem(&m_particles[0], particleCount, pShader);
 	assert(m_ps);
@@ -199,6 +206,8 @@ void ParticleSkinnedModel::update(float dt)
 			p.position += vel;
 
 			//p.position = target;
+			//const Body::sVertex& v = m_body->getVertexData()[i];
+			//p.position = v.position;
 		}
 
 		//const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
@@ -288,15 +297,30 @@ void ParticleSkinnedModel::drawPart(size_t index)
 }
 float ParticleSkinnedModel::getParticleMass(size_t index)
 {
-	return 0.1f*distanceToBone(index);
+	float dist = distanceToBone(index);
+	float mass;
+	if(dist<100.0f){
+		mass = 0.01f*distanceToBone(index);
+	}else{
+		mass = 0.02f*distanceToBone(index);
+	}
+	return glm::clamp(mass, 0.1f, 0.9f);
 }
 float ParticleSkinnedModel::distanceToBone(size_t index)
 {
 	const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
+	const std::vector<Transform>& boneData = m_body->getBoneOffsets();
 	int weightCount = vertexData[index].getWeightCount();
 
-	if(weightCount <= 1){
-		return 0.1f;
+	if(weightCount == 0){
+		return 0.0f;
+	} else if(weightCount == 1){
+		glm::vec3 p(vertexData[index].position);
+		int bindex = vertexData[index].weight[0].getIndex();
+		//p = boneData[bindex].getMat4() * p;
+		glm::vec3 b = glm::mat3_cast(boneData[bindex].getOrientation()) * boneData[bindex].getTranslation();
+		printf("b: %.2f,%.2f,%.2f;p: %.2f,%.2f,%.2f \n", b.x, b.y, b.z, p.x, p.y, p.z);
+		return glm::length(b-p);
 	} else {
 		int bfi0 = -1, bfi1 = -1;
 		float bff0 = 0.0, bff1 = 0.0;
@@ -313,12 +337,13 @@ float ParticleSkinnedModel::distanceToBone(size_t index)
 
 		bfi0 = vertexData[index].weight[bfi0].getIndex();
 		bfi1 = vertexData[index].weight[bfi1].getIndex();
-		glm::vec3 b0 = vertexData[bfi0].position;
-		glm::vec3 b1 = vertexData[bfi1].position;
+		glm::vec3 b0 = glm::mat3_cast(boneData[bfi0].getOrientation()) * boneData[bfi0].getTranslation();
+		glm::vec3 b1 = glm::mat3_cast(boneData[bfi1].getOrientation()) * boneData[bfi1].getTranslation();
 		glm::vec3 p = vertexData[index].position;
 		glm::vec3 v = b1 - b0;
 		glm::vec3 u = p - b0;
 		float dist = glm::length(u - glm::dot(u,v)/glm::length(v));
+		//printf("%f\n", b0.y);
 		//printf("%d: %f,%f,%f,%f \n", weightCount, vertexData[index].weight[0].getWeight() ,vertexData[index].weight[1].getWeight(), vertexData[index].weight[2].getWeight(),vertexData[index].weight[3].getWeight());
 
 		return dist;
