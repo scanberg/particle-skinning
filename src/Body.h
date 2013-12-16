@@ -30,7 +30,7 @@ public:
 
 		float	getWeight() const { return glm::fract(data)/0.99f; }
 		int		getIndex() const { return (int)data; }
-		bool	unused() const { return data == 0.0f; }
+		bool	unused() const { return data < 0.00001f; }
 	private:
 		float data;
 	};
@@ -41,6 +41,15 @@ public:
 		glm::vec3 		normal;
 		glm::vec2 		texCoord;
 		VertexWeight	weight[MAX_WEIGHTS];
+		int				getWeightCount() const
+		{
+			int count = 0;
+			for(int i=0; i<4; ++i){
+				if(!weight[i].unused())
+					++count;
+			}
+			return count;
+		}
 	};
 
 	struct sLine

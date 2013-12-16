@@ -24,6 +24,8 @@ protected:
 	// Pointer, to enable initialization in constructor rather than in the initializer list.
 	GPUParticleSystem*	m_ps;
 	bool				m_simulateOnGPU;
+	float				getParticleMass(size_t index);
+	float				distanceToBone(size_t index);
 
 	VertexBuffer					m_particleBuffer;
 	std::vector<sParticle>			m_particles;

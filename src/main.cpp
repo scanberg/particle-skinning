@@ -50,9 +50,9 @@ int main()
     basicShader.bindFragDataLocation(0, "out_frag0");
     basicShader.link();
 
-    std::string filename = "data/hellknight/hellknight.md5mesh";
+    std::string filename = "data/fatty/zfat.md5mesh";
     std::string dir = filename.substr(0,filename.rfind("/")+1);
-    std::string animation = dir + "idle2.md5anim";
+    std::string animation = dir + "walk2.md5anim";
 
     Body body(filename.c_str());
     body.addAnimation(animation.c_str(), "idle");

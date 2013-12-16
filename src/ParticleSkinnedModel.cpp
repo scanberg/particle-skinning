@@ -31,7 +31,7 @@ Model(body, mat, materialCount)
         const Body::sVertex v = body->getVertexData()[i];
         sParticle& p = m_particles[i];
 		p.oldPosition = p.position = v.position;
-		p.mass = 0.1f;
+		p.mass = getParticleMass(i);
     }
 
 	m_ps = new GPUParticleSystem(&m_particles[0], particleCount, pShader);
@@ -109,7 +109,7 @@ void ParticleSkinnedModel::resetParticlePositions()
 		}
         
 		p.oldPosition = p.position = glm::vec3(finalPos);
-		p.mass = 0.1f;
+		//p.mass = 0.1f;
     }
 
 	m_ps->setData(&m_particles[0], m_particles.size());
@@ -285,4 +285,43 @@ void ParticleSkinnedModel::drawPart(size_t index)
    		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, pOffset + offset);
 
 	m_vertexArray.unbind();
+}
+float ParticleSkinnedModel::getParticleMass(size_t index)
+{
+	return 0.1f*distanceToBone(index);
+}
+float ParticleSkinnedModel::distanceToBone(size_t index)
+{
+	const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
+	int weightCount = vertexData[index].getWeightCount();
+
+	if(weightCount <= 1){
+		return 0.1f;
+	} else {
+		int bfi0 = -1, bfi1 = -1;
+		float bff0 = 0.0, bff1 = 0.0;
+		for(int i=0; i<4; ++i){
+			if(bff0 < vertexData[index].weight[i].getWeight())
+				bfi0 = i;
+		}
+		bff0 = vertexData[index].weight[bfi0].getWeight();
+		for(int i=0; i<4; ++i){
+			if(i != bfi0 && vertexData[index].weight[bfi1].getWeight() < vertexData[index].weight[i].getWeight())
+				bfi1 = i;
+		}
+		bff1 = vertexData[index].weight[bfi1].getWeight();
+
+		bfi0 = vertexData[index].weight[bfi0].getIndex();
+		bfi1 = vertexData[index].weight[bfi1].getIndex();
+		glm::vec3 b0 = vertexData[bfi0].position;
+		glm::vec3 b1 = vertexData[bfi1].position;
+		glm::vec3 p = vertexData[index].position;
+		glm::vec3 v = b1 - b0;
+		glm::vec3 u = p - b0;
+		float dist = glm::length(u - glm::dot(u,v)/glm::length(v));
+		//printf("%d: %f,%f,%f,%f \n", weightCount, vertexData[index].weight[0].getWeight() ,vertexData[index].weight[1].getWeight(), vertexData[index].weight[2].getWeight(),vertexData[index].weight[3].getWeight());
+
+		return dist;
+	}
+
 }
