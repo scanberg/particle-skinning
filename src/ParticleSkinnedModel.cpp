@@ -311,7 +311,7 @@ glm::vec3 ParticleSkinnedModel::getParticleMass_K_D(size_t index)
 	float dist = distanceToBone(index);
 
 	float mass = 0.1f;
-	float k = 80.0f + 20.0f / dist;
+	float k = glm::clamp(80.0f + 20.0f / dist, 80.0f, 150.0f);
 	float d = glm::clamp(0.1f + 0.1f / glm::pow(dist, 0.3f), 0.1f, 0.4f);
 
 	// Ballpark stats
