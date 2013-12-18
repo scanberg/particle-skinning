@@ -67,6 +67,8 @@ void main(void)
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
+	vec3 goPath = normalize((pos - target));
+
 
 	vec3 attrForce = (target - pos) * 60.0;
 
@@ -74,7 +76,13 @@ void main(void)
 	vec3 acc = externalAcc + force / in_mass;
 
 	vec3 velocity = (1.0 - damping) * (pos - old) + acc * dt * dt;
-	out_position = in_position + velocity;
+
+	out_position = mix((in_position + velocity), goPath, 0.01*distance(target,pos));
 	out_oldPosition = in_position;
+	//if(distance(target, pos) > 5.0) {
+	//	out_position = target + 0.2*goPath;
+	//	out_oldPosition = target + 0.21*goPath;
+	//}
+
 	out_mass = in_mass;
 }
