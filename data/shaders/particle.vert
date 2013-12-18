@@ -73,16 +73,28 @@ void main(void)
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
 	vec3 goPath = normalize(pos-target);
-
+	float maxdist = 0.2f;
 
 	vec3 attrForce = (target - pos) * k;
 
 	vec3 force = externalForce + attrForce;
 	vec3 acc = externalAcc + force / mass;
-
 	vec3 velocity = (1.0 - d) * (pos - old) + acc * dt * dt;
-	out_position = in_position + velocity;
-	out_oldPosition = in_position;
+	float ratio = distance(pos,target) - maxdist;
+	
+	pos = in_position + velocity;
+	if(distance(target, pos) < maxdist) {
+		out_position = pos;
+		out_oldPosition = in_position;
+	}else{
+		vec3 maxDistPos = target + goPath*maxdist;
+		out_position = mix(pos, maxDistPos, clamp(distance(maxDistPos,pos), 0.0, 1.0));
+		out_oldPosition = out_position - velocity;
+	}
+
+
+	//out_position = in_position + velocity;
+	//out_oldPosition = in_position;
 	out_mass_k_d = in_mass_k_d;
 
 /*
