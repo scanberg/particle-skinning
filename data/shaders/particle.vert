@@ -72,6 +72,8 @@ void main(void)
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
+	vec3 goPath = normalize(pos-target);
+
 
 	vec3 attrForce = (target - pos) * k;
 
