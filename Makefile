@@ -21,7 +21,7 @@ else ifeq ($(UNAME), Darwin)
 	ldFlags += -I/usr/local/include
 	ldFlags += -L/usr/local/lib
 	ldFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
-	CC = g++
+	CC = clang++
 endif
 
 RM = rm
@@ -33,7 +33,7 @@ cObj 	= $(addprefix $(objDir),$(objects))
 cBin 	= $(addprefix $(binDir),$(bin))
 
 all: $(cBin)
-	./$(cBin)
+	./$(cBin) data/hellknight/hellknight.md5mesh data/hellknight/walk7.md5anim
 
 $(cBin): $(cMain) $(cObj)
 	$(CC) -std=c++11 $^ $(ldFlags) -o $@

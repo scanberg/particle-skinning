@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
 	Camera camera;
 
-    camera.setPosition(glm::vec3(0,1,3));
+    camera.setPosition(glm::vec3(0,1.5,3.5));
 
     model.rotate(glm::vec3(0,0,0));
     model.setPosition(glm::vec3(0,0,0));
