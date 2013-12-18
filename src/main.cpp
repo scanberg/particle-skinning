@@ -26,7 +26,7 @@ double calcDT();
 GLFWwindow *	g_window;
 GLuint			g_queryID[TIMESTAMPS];
 
-int main()
+int main(int argc, char* argv[])
 {
 	if(initGL(WIDTH, HEIGHT) != SUCCESS)
 		return -1;
@@ -43,9 +43,18 @@ int main()
     basicShader.bindFragDataLocation(0, "out_frag0");
     basicShader.link();
 
-    std::string filename = "data/fatty/zfat.md5mesh";
-    std::string dir = filename.substr(0,filename.rfind("/")+1);
-    std::string animation = dir + "bellypain.md5anim";
+	/* Take paths to md5mesh and md5anim as arguments */
+	std::string filename, dir, animation;
+	if(argc == 3){
+		filename = std::string(argv[1]);
+		dir = filename.substr(0,filename.rfind("/")+1);
+		animation = std::string(argv[2]);
+		printf("%s, %s\n", filename.c_str(), dir.c_str());
+	} else {
+		filename = "data/fatty/zfat.md5mesh";
+		dir = filename.substr(0,filename.rfind("/")+1);
+		animation = dir + "bellypain.md5anim";
+	}
 
     Body body(filename.c_str(), 0.025f);
     body.addAnimation(animation.c_str(), "idle");
@@ -70,11 +79,10 @@ int main()
 
 	Camera camera;
 
-    camera.setPosition(glm::vec3(0,4,10));
+    camera.setPosition(glm::vec3(0,1,3));
 
     model.rotate(glm::vec3(0,0,0));
     model.setPosition(glm::vec3(0,0,0));
-    model.setScale(glm::vec3(0.5));
 	model.resetParticlePositions();
 
     // queries for accurate profiling of opengl calls.
