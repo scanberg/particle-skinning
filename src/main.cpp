@@ -45,9 +45,9 @@ int main()
 
     std::string filename = "data/fatty/zfat.md5mesh";
     std::string dir = filename.substr(0,filename.rfind("/")+1);
-    std::string animation = dir + "walk2.md5anim";
+    std::string animation = dir + "bellypain.md5anim";
 
-    Body body(filename.c_str());
+    Body body(filename.c_str(), 0.025f);
     body.addAnimation(animation.c_str(), "idle");
 
     const std::vector<Body::sMaterial>& matfiles = body.getMaterials();
@@ -73,9 +73,8 @@ int main()
     camera.setPosition(glm::vec3(0,4,10));
 
     model.rotate(glm::vec3(0,0,0));
-    model.setScale(glm::vec3(0.08));
     model.setPosition(glm::vec3(0,0,0));
-
+    model.setScale(glm::vec3(0.5));
 	model.resetParticlePositions();
 
     // queries for accurate profiling of opengl calls.

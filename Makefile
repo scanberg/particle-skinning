@@ -21,7 +21,7 @@ else ifeq ($(UNAME), Darwin)
 	ldFlags += -I/usr/local/include
 	ldFlags += -L/usr/local/lib
 	ldFlags += -framework Cocoa -framework OpenGL -lglfw3 -lGLEW
-	CC = clang++
+	CC = g++
 endif
 
 RM = rm

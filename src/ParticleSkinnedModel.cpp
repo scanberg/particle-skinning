@@ -302,7 +302,14 @@ glm::vec3 ParticleSkinnedModel::getParticleMass_K_D(size_t index)
 {
 	float dist = distanceToBone(index);
 
-	return glm::vec3(0.1, 60, 0.1);
+	float mass = 0.1f;
+	float k = 60.0f;
+	float d = glm::clamp(10.0f / dist, 0.1f, 0.6f);
+
+	k = 6.0f;
+	d = 0.1f;
+
+	return glm::vec3(mass, k, d);
 }
 
 float ParticleSkinnedModel::distanceToBone(size_t index)

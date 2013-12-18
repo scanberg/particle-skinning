@@ -98,7 +98,7 @@ public:
 		StringHash specular;
 	};
 
-	Body(const char * meshfile);
+	Body(const char * meshfile, float scale = 1.0f);
 	~Body();
 
 	const std::vector<sPart>& getParts() { return m_partData; }
@@ -140,12 +140,15 @@ public:
 	void 			addAnimation(const char * animationfile, const char * name);
 	
 private:
-	void readBoneHierarchy(aiNode * node, int parent, unsigned int &maxDistToLeaf);
+	void readBoneHierarchy(aiNode * node, int parent);
 	void fillBuffers();
 
 	// GL buffers
 	unsigned int 	m_vb;
 	unsigned int 	m_ib;
+
+	// Used to scale all input
+	float m_scale;
 
 	// Geometric data
 	std::vector<sVertex> 	m_vertexData;
@@ -160,7 +163,6 @@ private:
 	std::vector<StringHash>		m_boneSH;
 	std::vector<Transform> 		m_boneOffset;
 	std::vector<int>			m_boneParent;
-	std::vector<unsigned int> 	m_boneMaxDistToLeaf;
 
 	// Animation data
 	std::vector<StringHash> m_animationSH;

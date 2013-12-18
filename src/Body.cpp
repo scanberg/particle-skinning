@@ -5,6 +5,7 @@
 #include <assimp/postprocess.h>    // Post processing flags
 #include <glm/gtc/type_ptr.hpp>    // aiMatrix4 -> glm:mat4
 #include <glm/gtc/matrix_access.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 inline void copyAiMatrixToGLM(const aiMatrix4x4 *from, glm::mat4 &to)
 {
@@ -81,7 +82,8 @@ void insertWeight(Body::sVertex & v, unsigned int index, float weight)
 		v.weight[i].setWeight(v.weight[i].getWeight() / totalW);
 }
 
-Body::Body(const char * meshfile)
+Body::Body(const char * meshfile, float scale) :
+m_scale(scale)
 {
 	m_vb = 0;
 	m_ib = 0;
@@ -178,7 +180,7 @@ Body::Body(const char * meshfile)
 		// Get vertex positions
 		for(unsigned int j=0; j<mesh[i]->mNumVertices; ++j) {
 			m_vertexData.push_back(sVertex());
-			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j].x,	vertex[j].y,	vertex[j].z);
+			m_vertexData[vertexOffset + j].position = glm::vec3(vertex[j].x,	vertex[j].y,	vertex[j].z) * scale;
 			m_vertexData[vertexOffset + j].normal	= glm::vec3(normal[j].x,	normal[j].y,	normal[j].z);
 			m_vertexData[vertexOffset + j].texCoord = glm::vec2(texCoord[0][j][0], texCoord[0][j][1]);
 		}
@@ -208,9 +210,13 @@ Body::Body(const char * meshfile)
 
 				m_boneSH.push_back(sh);
 				m_boneParent.push_back(-1);
-				m_boneMaxDistToLeaf.push_back(0);
 				glm::mat4 M;
 				copyAiMatrixToGLM(&bone[j]->mOffsetMatrix, M);
+				glm::vec4 pos = glm::column(M, 3) * m_scale;
+				M[3][0] = pos.x;
+				M[3][1] = pos.y;
+				M[3][2] = pos.z;
+				
 				m_boneOffset.push_back(Transform(M));
 			}
 			else
@@ -233,19 +239,18 @@ Body::Body(const char * meshfile)
 	}
 
 	//printf("Hierarchy: \n");
-	printNode(scene->mRootNode, 0);
+	//printNode(scene->mRootNode, 0);
 
-	unsigned int tmp;
-	readBoneHierarchy(scene->mRootNode, -1, tmp);
+	readBoneHierarchy(scene->mRootNode, -1);
 
 	// print the local version of the hierarchy
-	for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
-		printf("[%u] %s : parent %i, dist to leaf: %i \n", i, m_boneSH[i].getStr(), m_boneParent[i], m_boneMaxDistToLeaf[i]);
+	//for (unsigned int i = 0; i < (unsigned int)getBoneCount(); ++i)
+	//	printf("[%u] %s : parent %i, dist to leaf: %i \n", i, m_boneSH[i].getStr(), m_boneParent[i], m_boneMaxDistToLeaf[i]);
 	
+	aiReleaseImport(scene);
+
 	// If we have an animation named as the meshfile.md5anim
 	addAnimation(meshfile, "default");
-
-	aiReleaseImport(scene);
 
 	fillBuffers();
 }
@@ -369,7 +374,7 @@ void Body::addAnimation(const char* animationfile, const char* name)
 				const aiQuaternion &	aRot = channel->mRotationKeys[k].mValue;
 				const aiVector3D &		aScl = channel->mScalingKeys[0].mValue;
 
-				glm::vec3 pos = glm::vec3(aPos.x, aPos.y, aPos.z);
+				glm::vec3 pos = glm::vec3(aPos.x, aPos.y, aPos.z) * m_scale;
 				glm::quat rot = glm::quat(aRot.w, aRot.x, aRot.y, aRot.z);
 				glm::vec3 scl = glm::vec3(aScl.x, aScl.y, aScl.z);
 
@@ -382,7 +387,7 @@ void Body::addAnimation(const char* animationfile, const char* name)
 	}
 }
 
-void Body::readBoneHierarchy(aiNode* node, int parent, unsigned int &shortestDistToLeaf)
+void Body::readBoneHierarchy(aiNode* node, int parent)
 {
 	if (!node)
 		return;
@@ -396,19 +401,7 @@ void Body::readBoneHierarchy(aiNode* node, int parent, unsigned int &shortestDis
 	}
 
 	for (size_t i = 0; i < node->mNumChildren; ++i)
-	{
-		unsigned int dist;
-		readBoneHierarchy(node->mChildren[i], parent, dist);
-		m_boneMaxDistToLeaf[index] = glm::max(dist, m_boneMaxDistToLeaf[index]);
-	}
-
-	if(node->mNumChildren == 0)
-	{
-		shortestDistToLeaf = 1;
-		m_boneMaxDistToLeaf[index] = 0;
-	}
-	else
-		shortestDistToLeaf = m_boneMaxDistToLeaf[index]+1;
+		readBoneHierarchy(node->mChildren[i], parent);
 }
 
 void Body::fillBuffers()
