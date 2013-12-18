@@ -303,11 +303,20 @@ glm::vec3 ParticleSkinnedModel::getParticleMass_K_D(size_t index)
 	float dist = distanceToBone(index);
 
 	float mass = 0.1f;
-	float k = 60.0f;
-	float d = glm::clamp(10.0f / dist, 0.1f, 0.6f);
+	float k, d;
+	float kstiff, kjiggle, dstiff, djiggle;
+	float ratio = glm::clamp(1.0f/dist, 0.0f, 2.0f);
 
-	k = 6.0f;
-	d = 0.1f;
+	kstiff = 50.0f;
+	dstiff = 0.5f;
+	kjiggle = 20.0f;
+	djiggle = 0.1f;
+	//k = glm::max(50.0f, 1.0f/(dist+0.1f));
+	//d = glm::clamp(1.0f / dist, 0.05f, 0.2f);
+	k = kstiff*ratio + kjiggle*(1.0-ratio);
+	d = dstiff*ratio + djiggle*(1.0-ratio);
+	//printf("%i, %f \n", index, dist);
+
 
 	return glm::vec3(mass, k, d);
 }
