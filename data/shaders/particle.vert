@@ -77,9 +77,9 @@ void main(void)
 
 	vec3 velocity = (1.0 - damping) * (pos - old) + acc * dt * dt;
 
-	float dist = distance(target,pos);
-	out_position = mix((in_position + velocity), target+goPath, 0.1*dist);
-	out_oldPosition = mix(in_position, target+goPath-velocity, 0.1*dist);
+	float dist = distance(target,pos)-10.0;
+	out_position = mix(in_position + velocity, target+goPath+velocity, 0.1*dist);
+	out_oldPosition = mix(in_position, target+goPath, 0.1*dist);
 	//out_oldPosition = in_position;
 	//if(distance(target, pos) > 5.0) {
 	//	out_position = target + 0.2*goPath;
