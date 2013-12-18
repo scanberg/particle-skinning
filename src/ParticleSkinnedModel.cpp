@@ -127,7 +127,7 @@ void ParticleSkinnedModel::update(float dt)
 	// Send update call to superclass
 	Model::update(dt);
 
-	const int PS_SUB_UPDATE_STEPS = 1;
+	const int PS_SUB_UPDATE_STEPS = 2;
 
 	const float TARGET_TIME = (float)(1.0 / (60.0 * PS_SUB_UPDATE_STEPS));
 
@@ -187,36 +187,41 @@ void ParticleSkinnedModel::update(float dt)
 		}
 
 		const glm::vec3 externalForce(0);
-		const glm::vec3 externalAcc(0,0,0);
-		const float damping = 0.05;
+		const glm::vec3 externalAcc(0,-9.82,0);
+		const float maxDist = 0.1;
 
-		// Simulate timesteps
-		for(size_t i=0; i<m_particles.size(); ++i)
+		for(int u=0; u<PS_SUB_UPDATE_STEPS; ++u)
 		{
-			sParticle& p = m_particles[i]; 
-			glm::vec3& target = targetPos[i];
-			float mass 	= p.mass_k_d.x;
-			float k 	= p.mass_k_d.y;
-			float d 	= p.mass_k_d.z;
+			// Simulate timesteps
+			for(size_t i=0; i<m_particles.size(); ++i)
+			{
+				sParticle& p = m_particles[i]; 
+				glm::vec3& target = targetPos[i];
+				float mass 	= p.mass_k_d.x;
+				float k 	= p.mass_k_d.y;
+				float d 	= p.mass_k_d.z;
 
-			glm::vec3 attrForce = (target - p.position) * k;
+				float len 	= glm::length(target - p.position);
 
-			glm::vec3 force = externalForce + attrForce;
-			glm::vec3 acc = externalAcc + force / mass;
+				glm::vec3 attrForce = (target - p.position) * k;
 
-			glm::vec3 vel = (1.0f - d) * (p.position - p.oldPosition) + acc * dt * dt;
-			p.oldPosition = p.position;
-			p.position += vel;
+				glm::vec3 force = externalForce + attrForce;
+				glm::vec3 acc = externalAcc + force / mass;
 
-			//p.position = target;
-			//const Body::sVertex& v = m_body->getVertexData()[i];
-			//p.position = v.position;
+				glm::vec3 vel = (1.0f - d) * (p.position - p.oldPosition) + acc * dt * dt;
+				p.oldPosition = p.position;
+				p.position += vel;
+
+				//p.position = target;
+				//const Body::sVertex& v = m_body->getVertexData()[i];
+				//p.position = v.position;
+			}
 		}
 
-		//const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
-		//const float stiffness = 0.01f;
-
 		/*
+		const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
+		const float stiffness = 0.01f;
+
 		// Update constraints
 		for(size_t i=0; i<m_constraints.size(); ++i)
 		{
@@ -226,17 +231,20 @@ void ParticleSkinnedModel::update(float dt)
 			sParticle& p0 = m_particles[i0];
 			sParticle& p1 = m_particles[i1];
 
+			float m0 = p0.mass_k_d.x;
+			float m1 = p1.mass_k_d.x;
+
 			glm::vec3 delta = p1.position - p0.position;
 
 			glm::vec3 restDelta = vertexData[i1].position - vertexData[i0].position;
 			float restLength2 = glm::dot(restDelta, restDelta);
             
-			delta *= (1.0f - 2.0f * restLength2 / (restLength2 + glm::dot(delta,delta)) ) * (p0.mass + p1.mass);
+			delta *= (1.0f - 2.0f * restLength2 / (restLength2 + glm::dot(delta,delta)) ) * (m0 + m1);
             
 			glm::vec3 val = stiffness * delta;
             
-			p0.position += val / p0.mass;
-			p1.position -= val / p1.mass;
+			p0.position += val / m0;
+			p1.position -= val / m1;
 		}
 		*/
 
@@ -303,11 +311,13 @@ glm::vec3 ParticleSkinnedModel::getParticleMass_K_D(size_t index)
 	float dist = distanceToBone(index);
 
 	float mass = 0.1f;
-	float k = 60.0f;
-	float d = glm::clamp(10.0f / dist, 0.1f, 0.6f);
+	float k = 80.0f + 20.0f / dist;
+	float d = glm::clamp(0.1f + 0.1f / glm::pow(dist, 0.3f), 0.1f, 0.4f);
 
-	k = 6.0f;
-	d = 0.1f;
+	// Ballpark stats
+	// mass = 0.1f;
+	// k = 60.0f;
+	// d = glm::clamp(0.1f / glm::pow(dist, 0.5f), 0.1f, 0.4f);
 
 	return glm::vec3(mass, k, d);
 }
