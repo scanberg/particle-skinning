@@ -6,7 +6,7 @@ typedef struct
 {
 	glm::vec3 position;
 	glm::vec3 oldPosition;
-	float mass;
+	glm::vec3 mass_k_d;
 }sParticle;
 
 class ParticleSystem

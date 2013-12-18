@@ -140,7 +140,7 @@ public:
 	void 			addAnimation(const char * animationfile, const char * name);
 	
 private:
-	void readBoneHierarchy(aiNode * node, int parent);
+	void readBoneHierarchy(aiNode * node, int parent, unsigned int &maxDistToLeaf);
 	void fillBuffers();
 
 	// GL buffers
@@ -157,9 +157,10 @@ private:
 	std::vector<sMaterial> 	m_material;
 
 	// Bone transformations
-	std::vector<StringHash>	m_boneSH;
-	std::vector<Transform> 	m_boneOffset;
-	std::vector<int>		m_boneParent;
+	std::vector<StringHash>		m_boneSH;
+	std::vector<Transform> 		m_boneOffset;
+	std::vector<int>			m_boneParent;
+	std::vector<unsigned int> 	m_boneMaxDistToLeaf;
 
 	// Animation data
 	std::vector<StringHash> m_animationSH;

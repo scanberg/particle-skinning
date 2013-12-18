@@ -5,14 +5,14 @@
 
 layout(location=0) in vec3 	in_position;
 layout(location=1) in vec3 	in_oldPosition;
-layout(location=2) in float in_mass;
+layout(location=2) in vec3 	in_mass_k_d;
 
 layout(location=3) in vec3 	in_vertexPosition;
 layout(location=4) in vec4	in_vertexWeight;
 
 out vec3 	out_position;
 out vec3 	out_oldPosition;
-out float 	out_mass;
+out vec3 	out_mass_k_d;
 
 uniform float 	dt = 0.016;
 
@@ -25,7 +25,8 @@ uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 uniform mat4	boneMatrix[MAX_BONES];
 
-uniform float	damping = .05;
+uniform float	damping = .1;
+uniform float 	maxTolDist = 1.5;
 
 int unpackIndex(float vw)
 {
@@ -64,17 +65,32 @@ void main(void)
 	// Perhaps implement a static max distance from position to targetposition
 	// if the position is beyond this limit, move the position to the edge of this limit.
 
+	float mass 	= in_mass_k_d.x;
+	float k 	= in_mass_k_d.y;
+	float d 	= in_mass_k_d.z;
+
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
 
-	vec3 attrForce = (target - pos) * 60.0;
+	vec3 attrForce = (target - pos) * k;
 
 	vec3 force = externalForce + attrForce;
-	vec3 acc = externalAcc + force / in_mass;
+	vec3 acc = externalAcc + force / mass;
 
-	vec3 velocity = (1.0 - damping) * (pos - old) + acc * dt * dt;
+	vec3 velocity = (1.0 - d) * (pos - old) + acc * dt * dt;
 	out_position = in_position + velocity;
 	out_oldPosition = in_position;
-	out_mass = in_mass;
+	out_mass_k_d = in_mass_k_d;
+
+/*
+	vec3 	dir = out_position - target;	
+	float 	len = length(dir);
+
+	if(len > maxTolDist)
+	{
+		dir = dir/len;
+		out_position = target + dir * maxTolDist;
+		out_oldPosition = out_position;
+	}*/
 }

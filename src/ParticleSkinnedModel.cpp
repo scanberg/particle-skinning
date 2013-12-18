@@ -1,5 +1,4 @@
 #include <glm/gtc/type_ptr.hpp>
-
 #include "ParticleSkinnedModel.h"
 
 ParticleSkinnedModel::ParticleSkinnedModel(Shader& pShader, Body * body, Material ** mat, unsigned int materialCount) :
@@ -31,9 +30,10 @@ Model(body, mat, materialCount)
     for(size_t i=0; i<particleCount; ++i)
     {
         const Body::sVertex v = body->getVertexData()[i];
-        sParticle& p = m_particles[i];
-		p.oldPosition = p.position = v.position;
-		p.mass = getParticleMass(i);
+        sParticle& p 	= m_particles[i];
+        p.position 		= v.position;
+		p.oldPosition 	= p.position;
+		p.mass_k_d 		= getParticleMass_K_D(i);
 
 		boundingBoxMin = glm::min(boundingBoxMin, v.position);
 		boundingBoxMax = glm::max(boundingBoxMax, v.position);
@@ -195,13 +195,16 @@ void ParticleSkinnedModel::update(float dt)
 		{
 			sParticle& p = m_particles[i]; 
 			glm::vec3& target = targetPos[i];
+			float mass 	= p.mass_k_d.x;
+			float k 	= p.mass_k_d.y;
+			float d 	= p.mass_k_d.z;
 
-			glm::vec3 attrForce = (target - p.position) * 60.0f;
+			glm::vec3 attrForce = (target - p.position) * k;
 
 			glm::vec3 force = externalForce + attrForce;
-			glm::vec3 acc = externalAcc + force / p.mass;
+			glm::vec3 acc = externalAcc + force / mass;
 
-			glm::vec3 vel = (1.0f - damping) * (p.position - p.oldPosition) + acc * dt * dt;
+			glm::vec3 vel = (1.0f - d) * (p.position - p.oldPosition) + acc * dt * dt;
 			p.oldPosition = p.position;
 			p.position += vel;
 
@@ -295,17 +298,13 @@ void ParticleSkinnedModel::drawPart(size_t index)
 
 	m_vertexArray.unbind();
 }
-float ParticleSkinnedModel::getParticleMass(size_t index)
+glm::vec3 ParticleSkinnedModel::getParticleMass_K_D(size_t index)
 {
 	float dist = distanceToBone(index);
-	float mass;
-	if(dist<100.0f){
-		mass = 0.01f*distanceToBone(index);
-	}else{
-		mass = 0.02f*distanceToBone(index);
-	}
-	return glm::clamp(mass, 0.1f, 0.9f);
+
+	return glm::vec3(0.1, 60, 0.1);
 }
+
 float ParticleSkinnedModel::distanceToBone(size_t index)
 {
 	const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
@@ -319,7 +318,7 @@ float ParticleSkinnedModel::distanceToBone(size_t index)
 		int bindex = vertexData[index].weight[0].getIndex();
 		//p = boneData[bindex].getMat4() * p;
 		glm::vec3 b = glm::mat3_cast(boneData[bindex].getOrientation()) * boneData[bindex].getTranslation();
-		printf("b: %.2f,%.2f,%.2f;p: %.2f,%.2f,%.2f \n", b.x, b.y, b.z, p.x, p.y, p.z);
+		//printf("b: %.2f,%.2f,%.2f;p: %.2f,%.2f,%.2f \n", b.x, b.y, b.z, p.x, p.y, p.z);
 		return glm::length(b-p);
 	} else {
 		int bfi0 = -1, bfi1 = -1;

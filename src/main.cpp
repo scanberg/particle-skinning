@@ -33,16 +33,9 @@ int main()
 
     Shader particleShader;
     particleShader.attachShader(GL_VERTEX_SHADER, "data/shaders/particle.vert");
-    const char* ps_varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
+    const char* ps_varyings[3] = { "out_position", "out_oldPosition", "out_mass_k_d" };
     glTransformFeedbackVaryings(particleShader.getProgram(), 3, ps_varyings, GL_INTERLEAVED_ATTRIBS);
     particleShader.link();
-
-	Shader advectionShader;
-	advectionShader.attachShader(GL_VERTEX_SHADER, "data/shaders/advec.vert");
-	advectionShader.attachShader(GL_GEOMETRY_SHADER, "data/shaders/advec.geom");
-	const char* as_varyings[3] = { "out_position", "out_oldPosition", "out_mass" };
-	glTransformFeedbackVaryings(advectionShader.getProgram(), 3, as_varyings, GL_INTERLEAVED_ATTRIBS);
-	advectionShader.link();
 
     Shader basicShader;
     basicShader.attachShader(GL_VERTEX_SHADER, "data/shaders/basic.vert");
@@ -52,7 +45,7 @@ int main()
 
     std::string filename = "data/fatty/zfat.md5mesh";
     std::string dir = filename.substr(0,filename.rfind("/")+1);
-    std::string animation = dir + "attack_leftslap.md5anim";
+    std::string animation = dir + "walk2.md5anim";
 
     Body body(filename.c_str());
     body.addAnimation(animation.c_str(), "idle");

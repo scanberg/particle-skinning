@@ -19,7 +19,7 @@ m_shader(shader)
 
 	int positionAttr 	= m_shader.getAttribLocation("in_position");
 	int oldPositionAttr = m_shader.getAttribLocation("in_oldPosition");
-	int massAttr 		= m_shader.getAttribLocation("in_mass");
+	int massAttr 		= m_shader.getAttribLocation("in_mass_k_d");
 
 	const char* pOffset = 0;
 
@@ -32,7 +32,7 @@ m_shader(shader)
 
 		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
 		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
-		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
+		glVertexAttribPointer(massAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
 	glBindVertexArray(0);
 
 	glBindVertexArray(m_va[1]);
@@ -44,7 +44,7 @@ m_shader(shader)
 
 		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), pOffset);
 		glVertexAttribPointer(oldPositionAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 12 + pOffset);
-		glVertexAttribPointer(massAttr, 1, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
+		glVertexAttribPointer(massAttr, 3, GL_FLOAT, GL_FALSE, sizeof(sParticle), 24 + pOffset);
 	glBindVertexArray(0);
 
 	setData(particleData, particleCount);
