@@ -13,8 +13,8 @@
 #include "Texture2D.h"
 
 #define SUCCESS 1
-#define WIDTH 	1024
-#define HEIGHT 	768
+#define WIDTH 	800
+#define HEIGHT 	600
 #define TIMESTAMPS 3
 
 int initGL(int width, int height);

@@ -70,12 +70,14 @@ void GPUParticleSystem::setData(sParticle * particleData, size_t particleCount)
 
 void GPUParticleSystem::update(float dt)
 {
+	int loc;
+
 	m_time += dt;
 
 	//if (m_time < TARGET_TIME)
 	//	return;
 
-	m_time = 0;
+	//m_time = 0;
 
 	m_shader.bind();
 
@@ -83,7 +85,10 @@ void GPUParticleSystem::update(float dt)
 
 	glBindVertexArray(getSourceVA());
 
-	int loc = m_shader.getUniformLocation("dt");
+	loc = m_shader.getUniformLocation("time");
+	glUniform1f(loc, m_time);
+
+	loc = m_shader.getUniformLocation("dt");
 	glUniform1f(loc, dt);
 
 	m_shader.validate();

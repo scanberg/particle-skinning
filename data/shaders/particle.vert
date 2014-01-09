@@ -14,19 +14,18 @@ out vec3 	out_position;
 out vec3 	out_oldPosition;
 out vec3 	out_mass_k_d;
 
+uniform float 	time = 0;
 uniform float 	dt = 0.016;
 
 uniform vec3 	externalForce	= vec3(0);
-uniform vec3 	externalAcc		= vec3(0,0,0);
+uniform vec3 	externalAcc		= vec3(0,-9.82,0);
 
-uniform float	randomForce		= 0;
+uniform float	randomForceLim	= 2;
+uniform vec3 	randomForceDir	= vec3(-0.66,0,0.66);
 
 uniform mat4 	modelMatrix;
 uniform mat4 	invModelMatrix;
 uniform mat4	boneMatrix[MAX_BONES];
-
-uniform float	damping = .1;
-uniform float 	maxTolDist = 1.5;
 
 int unpackIndex(float vw)
 {
@@ -72,39 +71,31 @@ void main(void)
 	vec3 pos = in_position;
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
-	vec3 goPath = normalize(pos-target);
-	float maxdist = 0.2f;
+
+	const float maxdist = 0.2f;
 
 	vec3 attrForce = (target - pos) * k;
 
 	vec3 force = externalForce + attrForce;
 	vec3 acc = externalAcc + force / mass;
 	vec3 velocity = (1.0 - d) * (pos - old) + acc * dt * dt;
-	float ratio = distance(pos,target) - maxdist;
+
+	float dist = distance(pos,target);
+	vec3 goPath = (pos-target) / dist;
 	
 	pos = in_position + velocity;
-	if(distance(target, pos) < maxdist) {
+
+	if(dist < maxdist) {
 		out_position = pos;
 		out_oldPosition = in_position;
 	}else{
-		vec3 maxDistPos = target + goPath*maxdist;
+		vec3 maxDistPos = target + goPath * maxdist;
 		out_position = mix(pos, maxDistPos, clamp(distance(maxDistPos,pos), 0.0, 1.0));
 		out_oldPosition = out_position - velocity;
 	}
-
 
 	//out_position = in_position + velocity;
 	//out_oldPosition = in_position;
 	out_mass_k_d = in_mass_k_d;
 
-/*
-	vec3 	dir = out_position - target;	
-	float 	len = length(dir);
-
-	if(len > maxTolDist)
-	{
-		dir = dir/len;
-		out_position = target + dir * maxTolDist;
-		out_oldPosition = out_position;
-	}*/
 }

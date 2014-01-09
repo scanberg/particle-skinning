@@ -96,10 +96,8 @@ m_scale(scale)
 	// probably to request more postprocessing than we do in this example.
 	const aiScene* scene = aiImportFile(meshfile, 
 	aiProcess_GenSmoothNormals		 |
-	aiProcess_CalcTangentSpace       | 
 	aiProcess_Triangulate            |
-	aiProcess_JoinIdenticalVertices  |
-	aiProcess_SortByPType);
+	aiProcess_JoinIdenticalVertices);
 
 	// If the import failed, report it
 	if(!scene)
