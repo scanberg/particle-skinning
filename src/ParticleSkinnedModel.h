@@ -29,5 +29,6 @@ protected:
 
 	VertexBuffer					m_particleBuffer;
 	std::vector<sParticle>			m_particles;
-	std::vector<Body::sLine>		m_constraints;
+	std::vector<Body::sConnection>	m_constraints;
+	std::vector<Body::sConnection>	m_postVertexMerge;
 };

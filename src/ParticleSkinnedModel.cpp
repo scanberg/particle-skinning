@@ -7,20 +7,37 @@ Model(body, mat, materialCount)
 	assert(body);
 
 	const std::vector<Body::sTriangle> tris = m_body->getTriangleData();
-	std::set<Body::sLine> uniqueConnections;
+	std::set<Body::sConnection> uniqueConnections;
 
 	// add unique line connections given by triangles
 	for(size_t i=0; i<body->getTriangleCount(); ++i)
 	{
-		uniqueConnections.insert(Body::sLine(tris[i].index[0], tris[i].index[1]));
-		uniqueConnections.insert(Body::sLine(tris[i].index[0], tris[i].index[2]));
-		uniqueConnections.insert(Body::sLine(tris[i].index[1], tris[i].index[2]));
+		uniqueConnections.insert(Body::sConnection(tris[i].index[0], tris[i].index[1]));
+		uniqueConnections.insert(Body::sConnection(tris[i].index[0], tris[i].index[2]));
+		uniqueConnections.insert(Body::sConnection(tris[i].index[1], tris[i].index[2]));
 	}
 
-	for(std::set<Body::sLine>::const_iterator it = uniqueConnections.begin(); it != uniqueConnections.end(); ++it)
+	for(std::set<Body::sConnection>::const_iterator it = uniqueConnections.begin(); it != uniqueConnections.end(); ++it)
 		m_constraints.push_back(*it);
 
 	printf("Unique connections: %zu \n", m_constraints.size());
+
+	// Find vertices that share the same positions
+	// These must be merged after the constraints update
+	// Or else the seems will show
+	const float limit = 1.0e-9;
+	const std::vector<Body::sVertex> verts = m_body->getVertexData();
+	for(size_t i=0; i<body->getVertexCount()-1; ++i)
+	{
+		for(size_t j=i+1; j<body->getVertexCount(); ++j)
+		{
+			glm::vec3 v = verts[i].position - verts[j].position;
+			if(glm::dot(v,v) < limit)
+				m_postVertexMerge.push_back(Body::sConnection(i,j));
+		}
+	}
+
+	printf("Post vertex merge size: %u \n", m_postVertexMerge.size());
 
     size_t particleCount = body->getVertexCount();
 	m_particles.resize(particleCount);
@@ -128,6 +145,7 @@ void ParticleSkinnedModel::update(float dt)
 	Model::update(dt);
 
 	const int PS_SUB_UPDATE_STEPS = 2;
+	const int PS_CONSTRAINT_STEPS = 0;
 
 	const float TARGET_TIME = (float)(1.0 / (60.0 * PS_SUB_UPDATE_STEPS));
 
@@ -208,46 +226,77 @@ void ParticleSkinnedModel::update(float dt)
 
 				glm::vec3 force = externalForce + attrForce;
 				glm::vec3 acc = externalAcc + force / mass;
+				glm::vec3 pos = p.position;
 
 				glm::vec3 vel = (1.0f - d) * (p.position - p.oldPosition) + acc * dt * dt;
-				p.oldPosition = p.position;
-				p.position += vel;
 
-				//p.position = target;
-				//const Body::sVertex& v = m_body->getVertexData()[i];
-				//p.position = v.position;
+				// This part can probably be optimized further
+				// This is to make a soft clamp of the particle pos to the max allowed distance
+				float dist = glm::distance(pos, target);
+				glm::vec3 goPath = (pos-target) / dist;
+	
+				pos += vel;
+
+				if(dist < maxDist) {
+					p.oldPosition = p.position;
+					p.position = pos;
+				}else{
+					glm::vec3 maxDistPos = target + goPath * maxDist;
+					p.position = glm::mix(pos, maxDistPos, glm::clamp(glm::distance(maxDistPos,pos), 0.0f, 1.0f));
+					p.oldPosition = p.position - vel;
+				}
 			}
 		}
 
-		/*
+		
 		const std::vector<Body::sVertex>& vertexData = m_body->getVertexData();
-		const float stiffness = 0.01f;
+		const float stiffness = 0.1f;
 
-		// Update constraints
-		for(size_t i=0; i<m_constraints.size(); ++i)
+		for(int u=0; u<PS_CONSTRAINT_STEPS; ++u)
 		{
-			size_t i0 = m_constraints[i].index[0];
-			size_t i1 = m_constraints[i].index[1];
+			// Update constraints
+			for(size_t i=0; i<m_constraints.size(); ++i)
+			{
+				size_t i0 = m_constraints[i].index[0];
+				size_t i1 = m_constraints[i].index[1];
 
-			sParticle& p0 = m_particles[i0];
-			sParticle& p1 = m_particles[i1];
+				sParticle& p0 = m_particles[i0];
+				sParticle& p1 = m_particles[i1];
 
-			float m0 = p0.mass_k_d.x;
-			float m1 = p1.mass_k_d.x;
+				float m0 = p0.mass_k_d.x;
+				float m1 = p1.mass_k_d.x;
 
-			glm::vec3 delta = p1.position - p0.position;
+				glm::vec3 delta = p1.position - p0.position;
 
-			glm::vec3 restDelta = vertexData[i1].position - vertexData[i0].position;
-			float restLength2 = glm::dot(restDelta, restDelta);
+				glm::vec3 restDelta = vertexData[i1].position - vertexData[i0].position;
+				float restLength2 = glm::dot(restDelta, restDelta);
             
-			delta *= (1.0f - 2.0f * restLength2 / (restLength2 + glm::dot(delta,delta)) ) * (m0 + m1);
+				delta *= (1.0f - 2.0f * restLength2 / (restLength2 + glm::dot(delta,delta)) ) * (m0 + m1);
             
-			glm::vec3 val = stiffness * delta;
+				glm::vec3 val = stiffness * delta;
             
-			p0.position += val / m0;
-			p1.position -= val / m1;
+				p0.position += val / m0;
+				p1.position -= val / m1;
+			}
+
+			// Merge seems and maintain velocity
+			for(size_t i=0; i<m_postVertexMerge.size(); ++i)
+			{
+				const unsigned int i0 = m_postVertexMerge[i].index[0];
+				const unsigned int i1 = m_postVertexMerge[i].index[1];
+
+				glm::vec3 v0 = m_particles[i0].position - m_particles[i0].oldPosition;
+				glm::vec3 v1 = m_particles[i1].position - m_particles[i1].oldPosition;
+
+				glm::vec3 p = m_particles[i0].position * 0.5f + m_particles[i1].position * 0.5f;
+
+				m_particles[i0].position = p;
+				m_particles[i0].oldPosition = p - v0;
+
+				m_particles[i1].position = p;
+				m_particles[i1].oldPosition = p - v1;
+			}
 		}
-		*/
 
 		// Update bufferdata!
 		m_particleBuffer.bind();

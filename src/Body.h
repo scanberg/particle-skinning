@@ -52,10 +52,10 @@ public:
 		}
 	};
 
-	struct sLine
+	struct sConnection
 	{
-		sLine();
-		sLine(unsigned int indexA, unsigned indexB)
+		sConnection();
+		sConnection(unsigned int indexA, unsigned int indexB)
 		{
 			if(indexA < indexB)
 			{
@@ -69,7 +69,7 @@ public:
 			}
 		}
 
-		bool operator<(const sLine& rhs) const { return index[0] < rhs.index[0]; }
+		bool operator<(const sConnection& rhs) const { return index[0] < rhs.index[0]; }
 
 		unsigned int index[2];
 	};

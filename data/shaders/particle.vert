@@ -72,7 +72,7 @@ void main(void)
 	vec3 old = in_oldPosition;
 	vec3 target = targetPosition.xyz;
 
-	const float maxdist = 0.2f;
+	const float maxdist = 0.1f;
 
 	vec3 attrForce = (target - pos) * k;
 
