@@ -149,6 +149,7 @@ void ParticleSkinnedModel::update(float dt)
 		loc = shader.getUniformLocation("boneMatrix");
 		calculateAndSetBoneMatrices(loc);
 
+		//loc = shader.getUniformLocation("randomForce");
 		
 		for(int i=0; i<PS_SUB_UPDATE_STEPS; ++i)
 		{
@@ -199,9 +200,9 @@ void ParticleSkinnedModel::update(float dt)
 				glm::vec3& target = targetPos[i];
 				float mass 	= p.mass_k_d.x;
 				float k 	= p.mass_k_d.y;
-				float d 	= p.mass_k_d.z;
+				float d 	= p.mass_k_d.z * 0.4f;
 
-				float len 	= glm::length(target - p.position);
+				//float len 	= glm::length(target - p.position);
 
 				glm::vec3 attrForce = (target - p.position) * k;
 
