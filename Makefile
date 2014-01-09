@@ -35,6 +35,9 @@ cBin 	= $(addprefix $(binDir),$(bin))
 all: $(cBin)
 	./$(cBin) data/hellknight/hellknight.md5mesh data/hellknight/walk7.md5anim
 
+run: $(cBin)
+	for anim in data/hellknight/*.md5anim; do ./$(cBin) data/hellknight/hellknight.md5mesh $$anim; done
+
 $(cBin): $(cMain) $(cObj)
 	$(CC) -std=c++11 $^ $(ldFlags) -o $@
 

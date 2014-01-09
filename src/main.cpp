@@ -51,9 +51,9 @@ int main(int argc, char* argv[])
 		animation = std::string(argv[2]);
 		printf("%s, %s\n", filename.c_str(), dir.c_str());
 	} else {
-		filename = "data/fatty/zfat.md5mesh";
+		filename = "data/hellknight/hellknight.md5mesh";
 		dir = filename.substr(0,filename.rfind("/")+1);
-		animation = dir + "bellypain.md5anim";
+		animation = dir + "attack3.md5anim";
 	}
 
     Body body(filename.c_str(), 0.025f);
@@ -134,6 +134,7 @@ int main(int argc, char* argv[])
         glQueryCounter(g_queryID[1], GL_TIMESTAMP);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(1.0f,1.0f, 1.0f, 1.0f);
         glViewport(0, 0, WIDTH, HEIGHT);
 
         glEnable(GL_DEPTH_TEST);
